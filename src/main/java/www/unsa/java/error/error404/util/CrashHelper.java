@@ -1,5 +1,5 @@
 // Fixed
-package www.unsa.java.error.404.util;
+package www.unsa.java.error.error404.util;
 
 public class CrashHelper {
     public static void crashJvm(String reason) {

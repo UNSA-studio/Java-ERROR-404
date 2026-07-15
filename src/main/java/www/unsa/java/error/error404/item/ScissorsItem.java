@@ -1,5 +1,5 @@
 // Fixed
-package www.unsa.java.error.404.item;
+package www.unsa.java.error.error404.item;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -9,7 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
-import www.unsa.java.error.404.util.CrashHelper;
+import www.unsa.java.error.error404.util.CrashHelper;
 
 public class ScissorsItem extends Item {
     public ScissorsItem(Properties properties) {

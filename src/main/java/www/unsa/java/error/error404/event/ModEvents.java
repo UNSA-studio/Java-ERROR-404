@@ -1,5 +1,5 @@
 // Fixed
-package www.unsa.java.error.404.event;
+package www.unsa.java.error.error404.event;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -15,10 +15,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import www.unsa.java.error.404.JavaError404;
-import www.unsa.java.error.404.item.ExceptionItem;
-import www.unsa.java.error.404.item.ModItems;
-import www.unsa.java.error.404.util.CrashHelper;
+import www.unsa.java.error.error404.JavaError404;
+import www.unsa.java.error.error404.item.ExceptionItem;
+import www.unsa.java.error.error404.item.ModItems;
+import www.unsa.java.error.error404.util.CrashHelper;
 
 import java.util.Random;
 

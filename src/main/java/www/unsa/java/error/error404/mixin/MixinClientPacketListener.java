@@ -1,5 +1,5 @@
 // Fixed
-package www.unsa.java.error.404.mixin;
+package www.unsa.java.error.error404.mixin;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;

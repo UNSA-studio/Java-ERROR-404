@@ -1,9 +1,9 @@
 // Fixed
-package www.unsa.java.error.404;
+package www.unsa.java.error.error404;
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import www.unsa.java.error.404.item.ModItems;
+import www.unsa.java.error.error404.item.ModItems;
 
 @Mod(JavaError404.MODID)
 public class JavaError404 {

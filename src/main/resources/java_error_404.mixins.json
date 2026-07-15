@@ -1,6 +1,6 @@
 {
     "required": true,
-    "package": "www.unsa.java.error.404.mixin",
+    "package": "www.unsa.java.error.error404.mixin",
     "compatibilityLevel": "JAVA_21",
     "refmap": "java_error_404.refmap.json",
     "mixins": [],

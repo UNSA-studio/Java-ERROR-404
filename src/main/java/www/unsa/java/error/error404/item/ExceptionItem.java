@@ -1,5 +1,5 @@
 // Fixed
-package www.unsa.java.error.404.item;
+package www.unsa.java.error.error404.item;
 
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -7,7 +7,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import www.unsa.java.error.404.util.CrashHelper;
+import www.unsa.java.error.error404.util.CrashHelper;
 
 public class ExceptionItem extends Item {
     private final String exceptionName;

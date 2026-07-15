@@ -1,10 +1,10 @@
 // Fixed
-package www.unsa.java.error.404.item;
+package www.unsa.java.error.error404.item;
 
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import www.unsa.java.error.404.JavaError404;
+import www.unsa.java.error.error404.JavaError404;
 
 import java.util.function.Supplier;
 

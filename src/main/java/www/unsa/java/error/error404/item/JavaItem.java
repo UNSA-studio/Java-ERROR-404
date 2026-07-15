@@ -1,5 +1,5 @@
 // Fixed
-package www.unsa.java.error.404.item;
+package www.unsa.java.error.error404.item;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
-import www.unsa.java.error.404.util.CrashHelper;
+import www.unsa.java.error.error404.util.CrashHelper;
 
 import java.util.List;
 
