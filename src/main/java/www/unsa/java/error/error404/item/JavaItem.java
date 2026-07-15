@@ -1,10 +1,8 @@
-// Fixed
 package www.unsa.java.error.error404.item;
 
-import net.minecraft.nbt.CompoundTag;
+import com.mojang.serialization.Codec;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
@@ -19,13 +17,15 @@ import java.util.List;
 
 public class JavaItem extends Item {
     public JavaItem(Properties properties) {
-        super(properties.food(new FoodProperties.Builder().alwaysEdible().nutrition(0).saturationMod(0).build()));
+        super(properties.food(new FoodProperties.Builder().alwaysEdible().nutrition(0).saturationModifier(0).build()));
     }
 
     public static String getMode(ItemStack stack) {
-        CompoundTag tag = stack.getOrCreateTag();
-        if (!tag.contains("mode")) tag.putString("mode", "Ordinary");
-        return tag.getString("mode");
+        return stack.getOrDefault(ModDataComponents.MODE.get(), "Ordinary");
+    }
+
+    public static void setMode(ItemStack stack, String mode) {
+        stack.set(ModDataComponents.MODE.get(), mode);
     }
 
     public static void nextMode(ItemStack stack) {
@@ -37,14 +37,14 @@ public class JavaItem extends Item {
             case "Overload" -> "Nothing";
             default -> "Ordinary";
         };
-        stack.getOrCreateTag().putString("mode", next);
+        setMode(stack, next);
     }
 
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (entity instanceof Player player) {
-            if (getMode(stack).equals("Ordinary") || getMode(stack).equals("Overload")) {
-                // 触发 JVM 崩溃：Java 找不到
+            String mode = getMode(stack);
+            if (mode.equals("Ordinary") || mode.equals("Overload")) {
                 if (!level.isClientSide) {
                     CrashHelper.crashJvm("ClassNotFoundException: Java not found");
                 }
@@ -54,9 +54,9 @@ public class JavaItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
         tooltip.add(Component.literal("Mode: " + getMode(stack)));
-        int overloads = stack.getOrCreateTag().getInt("overloadCount");
+        int overloads = stack.getOrDefault(ModDataComponents.OVERLOAD_COUNT.get(), 0);
         if (overloads > 0) tooltip.add(Component.literal("Overloads: " + overloads + "/5"));
     }
 }
