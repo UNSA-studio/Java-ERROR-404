@@ -2,7 +2,6 @@ package www.unsa.java.error.error404.event;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -15,7 +14,6 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import www.unsa.java.error.error404.JavaError404;
 import www.unsa.java.error.error404.item.ExceptionItem;
-import www.unsa.java.error.error404.item.JavaItem;
 import www.unsa.java.error.error404.item.ModItems;
 import www.unsa.java.error.error404.network.CrashPayload;
 import www.unsa.java.error.error404.network.DisconnectPayload;
@@ -80,11 +78,10 @@ public class ModEvents {
                 if (!player.addItem(packet)) {
                     player.drop(packet, false);
                 }
-                // 客户端自己断开连接
-                if (player instanceof ServerPlayer) {
-                    player.connection.disconnect(Component.literal("Packet loss: Server stopped sending packets"));
-                } else {
-                    // 单人模式在客户端处理
+                // 断开连接：服务端踢出或客户端自断
+                if (player instanceof ServerPlayer sp) {
+                    sp.connection.disconnect(Component.literal("Packet loss: Server stopped sending packets"));
+                } else if (player.level().isClientSide) {
                     player.connection.getConnection().disconnect(Component.literal("Packet loss"));
                 }
             }
