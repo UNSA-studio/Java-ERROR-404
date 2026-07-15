@@ -23,13 +23,8 @@ neoForge {
     mods {
         javaerror404 {
             sourceSet sourceSets.main
-            // Mixin 配置文件
-            mixinConfig 'java_error_404.mixins.json'
         }
     }
-}
-
-dependencies {
 }
 
 processResources {
