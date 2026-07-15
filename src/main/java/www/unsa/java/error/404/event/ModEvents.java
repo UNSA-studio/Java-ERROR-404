@@ -1,3 +1,4 @@
+// Fixed
 package www.unsa.java.error.404.event;
 
 import net.minecraft.ChatFormatting;
