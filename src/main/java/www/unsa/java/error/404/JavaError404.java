@@ -10,5 +10,6 @@ public class JavaError404 {
 
     public JavaError404(IEventBus modEventBus) {
         ModItems.ITEMS.register(modEventBus);
+        // 事件已在 ModEvents 类中通过 @EventBusSubscriber 自动注册
     }
 }
