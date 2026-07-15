@@ -1,0 +1,14 @@
+{
+    "required": true,
+    "package": "www.unsa.java.error.404.mixin",
+    "compatibilityLevel": "JAVA_21",
+    "refmap": "java_error_404.refmap.json",
+    "mixins": [],
+    "client": [
+        "MixinClientPacketListener"
+    ],
+    "server": [],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

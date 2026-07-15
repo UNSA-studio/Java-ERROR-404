@@ -1,0 +1,54 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.78'
+}
+
+version = mod_version
+group = 'www.unsa.java.error.404'
+base.archivesName = 'JavaERROR404'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.neoforged.net/releases' }
+}
+
+neoForge {
+    version = neoforge_version
+    runs {
+        client { client() }
+        server { server() }
+    }
+    mods {
+        javaerror404 {
+            sourceSet sourceSets.main
+        }
+    }
+    mixin {
+        config 'java_error_404.mixins.json'
+    }
+}
+
+dependencies {
+}
+
+processResources {
+    var replaceProperties = [
+        minecraft_version      : minecraft_version,
+        neo_version            : neoforge_version,
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_version            : mod_version,
+        mod_authors            : mod_authors,
+        mod_description        : mod_description
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
