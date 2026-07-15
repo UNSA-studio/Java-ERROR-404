@@ -9,6 +9,9 @@ displayName = "${mod_name}"
 authors = "${mod_authors}"
 description = "${mod_description}"
 
+[[mods.entrypoints]]
+main = "www.unsa.java.error.error404.JavaError404"
+
 [[mixins]]
 config = "java_error_404.mixins.json"
 
