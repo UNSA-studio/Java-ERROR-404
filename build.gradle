@@ -4,7 +4,7 @@ plugins {
 }
 
 version = mod_version
-group = 'www.unsa.java.error.404'
+group = 'www.unsa.java.error.error404'
 base.archivesName = 'JavaERROR404'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
