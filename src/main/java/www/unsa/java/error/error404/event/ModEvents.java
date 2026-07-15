@@ -1,5 +1,6 @@
 package www.unsa.java.error.error404.event;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -60,7 +61,7 @@ public class ModEvents {
                 PacketDistributor.sendToPlayer(targetPlayer, new DisconnectPayload("Connection lost: Packet not received"));
                 event.setCanceled(true);
             } else if (event.getTarget() instanceof Player) {
-                // 客户端玩家自己（单人模式）或其他情况，略过
+                // 忽略非服务端玩家
             } else {
                 user.displayClientMessage(Component.literal("Unable to intercept the corresponding player network packet"), true);
                 event.setCanceled(true);
@@ -78,11 +79,11 @@ public class ModEvents {
                 if (!player.addItem(packet)) {
                     player.drop(packet, false);
                 }
-                // 断开连接：服务端踢出或客户端自断
+                // 断开连接
                 if (player instanceof ServerPlayer sp) {
                     sp.connection.disconnect(Component.literal("Packet loss: Server stopped sending packets"));
                 } else if (player.level().isClientSide) {
-                    player.connection.getConnection().disconnect(Component.literal("Packet loss"));
+                    Minecraft.getInstance().player.connection.getConnection().disconnect(Component.literal("Packet loss"));
                 }
             }
         }

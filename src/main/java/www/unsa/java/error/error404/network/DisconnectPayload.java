@@ -1,6 +1,7 @@
 package www.unsa.java.error.error404.network;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -35,9 +36,8 @@ public record DisconnectPayload(String reason) implements CustomPacketPayload {
 
     public static void handle(DisconnectPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            // 客户端断开连接
             if (context.player().level().isClientSide) {
-                context.player().connection.getConnection().disconnect(Component.literal(payload.reason));
+                Minecraft.getInstance().player.connection.getConnection().disconnect(Component.literal(payload.reason));
             }
         });
     }
