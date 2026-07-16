@@ -3,11 +3,11 @@ loaderVersion = "[4,)"
 license = "All rights reserved"
 
 [[mods]]
-modId = "${mod_id}"
-version = "${mod_version}"
-displayName = "${mod_name}"
-authors = "${mod_authors}"
-description = "${mod_description}"
+modId = "java_error_404"
+version = "1.0.0"
+displayName = "Java ERROR 404"
+authors = "UNSA-Studio"
+description = "Java cannot parse the data properly ERROR 404"
 
 [[mods.entrypoints]]
 main = "www.unsa.java.error.error404.JavaError404"
@@ -15,16 +15,16 @@ main = "www.unsa.java.error.error404.JavaError404"
 [[mixins]]
 config = "java_error_404.mixins.json"
 
-[[dependencies.${mod_id}]]
+[[dependencies.java_error_404]]
     modId = "neoforge"
     mandatory = true
-    versionRange = "[${neo_version},)"
+    versionRange = "[21.1.219,)"
     ordering = "NONE"
     side = "BOTH"
 
-[[dependencies.${mod_id}]]
+[[dependencies.java_error_404]]
     modId = "minecraft"
     mandatory = true
-    versionRange = "[${minecraft_version}]"
+    versionRange = "[1.21.1]"
     ordering = "NONE"
     side = "BOTH"
