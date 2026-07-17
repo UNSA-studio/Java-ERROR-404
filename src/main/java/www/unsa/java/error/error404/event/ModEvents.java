@@ -3,7 +3,7 @@ package www.unsa.java.error.error404.event;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -20,6 +20,8 @@ import www.unsa.java.error.error404.network.CrashPayload;
 import www.unsa.java.error.error404.network.DisconnectPayload;
 
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @EventBusSubscriber(modid = JavaError404.MODID)
 public class ModEvents {
@@ -38,13 +40,7 @@ public class ModEvents {
         if (weapon.getItem() instanceof ExceptionItem exc) {
             target.hurt(attacker.damageSources().genericKill(), Float.MAX_VALUE);
             event.setCanceled(true);
-            if (target instanceof ServerPlayer victim) {
-                if (exc.isCausesCrash()) {
-                    PacketDistributor.sendToPlayer(victim, new CrashPayload());
-                } else {
-                    PacketDistributor.sendToPlayer(victim, new DisconnectPayload(exc.getExceptionName()));
-                }
-            }
+            // 不在此触发崩溃/断连，留在死亡事件处理
         }
     }
 
@@ -53,15 +49,13 @@ public class ModEvents {
         Player user = event.getEntity();
         ItemStack stack = user.getItemInHand(event.getHand());
         if (stack.is(ModItems.SCISSORS.get())) {
-            if (event.getTarget() instanceof ServerPlayer targetPlayer) {
+            if (event.getTarget() instanceof Player targetPlayer) {
                 ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
-                if (!targetPlayer.addItem(packet)) {
+                if (!targetPlayer.getInventory().add(packet)) {
                     targetPlayer.drop(packet, false);
                 }
-                PacketDistributor.sendToPlayer(targetPlayer, new DisconnectPayload("Connection lost: Packet not received"));
+                scheduleDisconnect(targetPlayer, "Connection lost: Packet not received", 2000L);
                 event.setCanceled(true);
-            } else if (event.getTarget() instanceof Player) {
-                // 忽略非服务端玩家
             } else {
                 user.displayClientMessage(Component.literal("Unable to intercept the corresponding player network packet"), true);
                 event.setCanceled(true);
@@ -76,41 +70,70 @@ public class ModEvents {
         if (stack.is(ModItems.SCISSORS.get())) {
             if (RANDOM.nextFloat() < 0.1f) {
                 ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
-                if (!player.addItem(packet)) {
+                if (!player.getInventory().add(packet)) {
                     player.drop(packet, false);
                 }
-                // 断开连接
-                if (player instanceof ServerPlayer sp) {
-                    sp.connection.disconnect(Component.literal("Packet loss: Server stopped sending packets"));
-                } else if (player.level().isClientSide) {
-                    Minecraft.getInstance().player.connection.getConnection().disconnect(Component.literal("Packet loss"));
-                }
+                scheduleDisconnect(player, "Packet loss: Server stopped sending packets", 2000L);
             }
         }
+    }
+
+    private static void scheduleDisconnect(Player player, String reason, long delay) {
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (player instanceof ServerPlayer sp) {
+                    sp.connection.disconnect(Component.literal(reason));
+                } else if (player.level().isClientSide) {
+                    Minecraft.getInstance().player.connection.getConnection().disconnect(Component.literal(reason));
+                }
+            }
+        }, delay);
     }
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player victim) {
-            DamageSource source = event.getSource();
-            if (source.getEntity() instanceof Player attacker) {
-                ItemStack weapon = attacker.getMainHandItem();
-                if (weapon.getItem() instanceof ExceptionItem) {
-                    Component deathMsg;
-                    if (RANDOM.nextFloat() < 0.6) {
-                        deathMsg = Component.literal(victim.getName().getString() + " Killed by Java.Error.404");
-                    } else {
-                        deathMsg = Component.literal(victim.getName().getString() + " was killed by " + generateGibberish());
-                    }
-                    event.setCanceled(true);
-                    victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
+            // 检查攻击者或自杀使用的异常物品
+            ItemStack weapon = victim.getMainHandItem();
+            if (weapon.getItem() instanceof ExceptionItem exc && event.getSource().getEntity() == null) {
+                // 自杀
+                handleExceptionDeath(victim, exc, true);
+            } else if (event.getSource().getEntity() instanceof Player attacker) {
+                ItemStack attackerWeapon = attacker.getMainHandItem();
+                if (attackerWeapon.getItem() instanceof ExceptionItem exc) {
+                    handleExceptionDeath(victim, exc, false);
                 }
-            } else if (source == victim.damageSources().genericKill() && victim.getMainHandItem().getItem() instanceof ExceptionItem) {
-                Component msg = Component.literal(victim.getName().getString() + " ※ui꧂idᝰ >hy $%e y№u ￡o€n¥ t[i♯?");
-                event.setCanceled(true);
-                victim.level().players().forEach(p -> p.sendSystemMessage(msg));
             }
         }
+    }
+
+    private static void handleExceptionDeath(Player victim, ExceptionItem exc, boolean isSuicide) {
+        // 自定义死亡消息
+        Component deathMsg;
+        if (isSuicide) {
+            deathMsg = Component.literal(victim.getName().getString() + " ※ui꧂idᝰ >hy $%e y№u ￡o€n¥ t[i♯?");
+        } else {
+            if (RANDOM.nextFloat() < 0.6) {
+                deathMsg = Component.literal(victim.getName().getString() + " Killed by Java.Error.404");
+            } else {
+                deathMsg = Component.literal(victim.getName().getString() + " was killed by " + generateGibberish());
+            }
+        }
+        // 发送全局消息
+        victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
+        // 触发崩溃或断连
+        if (exc.isCausesCrash()) {
+            CrashHelper.crashJvm(exc.getExceptionName());
+        } else {
+            if (victim instanceof ServerPlayer sp) {
+                sp.connection.disconnect(Component.literal(exc.getExceptionName()));
+            } else if (victim.level().isClientSide) {
+                Minecraft.getInstance().player.connection.getConnection().disconnect(Component.literal(exc.getExceptionName()));
+            }
+        }
+        // 取消原版死亡画面，因为我们自己处理了消息
+        event.setCanceled(true);
     }
 
     private static String generateGibberish() {
