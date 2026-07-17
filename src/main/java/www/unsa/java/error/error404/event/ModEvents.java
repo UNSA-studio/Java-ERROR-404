@@ -15,6 +15,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import www.unsa.java.error.error404.JavaError404;
 import www.unsa.java.error.error404.item.ExceptionItem;
+import www.unsa.java.error.error404.item.JavaItem;
 import www.unsa.java.error.error404.item.ModItems;
 import www.unsa.java.error.error404.network.CrashPayload;
 import www.unsa.java.error.error404.network.DisconnectPayload;
@@ -53,11 +54,9 @@ public class ModEvents {
         if (stack.is(ModItems.SCISSORS.get())) {
             if (event.getTarget() instanceof Player targetPlayer) {
                 ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
-                // 直接放进背包
                 if (!targetPlayer.getInventory().add(packet)) {
                     targetPlayer.drop(packet, false);
                 }
-                // 2 秒后断开
                 scheduleDisconnect(targetPlayer, "Connection lost: Packet not received", 2000L);
                 event.setCanceled(true);
             } else {
@@ -67,20 +66,28 @@ public class ModEvents {
         }
     }
 
-    // 剪刀左键空气
+    // 左键空气：处理剪刀和 Java 模式切换
     @SubscribeEvent
     public static void onLeftClickEmpty(PlayerInteractEvent.LeftClickEmpty event) {
         Player player = event.getEntity();
         ItemStack stack = player.getItemInHand(event.getHand());
+
+        // 剪刀逻辑
         if (stack.is(ModItems.SCISSORS.get())) {
             if (RANDOM.nextFloat() < 0.1f) {
                 ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
                 if (!player.getInventory().add(packet)) {
                     player.drop(packet, false);
                 }
-                // 2 秒后断开
                 scheduleDisconnect(player, "Packet loss: Server stopped sending packets", 2000L);
             }
+        }
+
+        // Java 物品：潜行 + 左键空气切换模式
+        if (stack.getItem() instanceof JavaItem && player.isCrouching()) {
+            JavaItem.nextMode(stack);
+            player.displayClientMessage(Component.literal("Switched to " + JavaItem.getMode(stack)), true);
+            event.setCanceled(true); // 防止任何默认行为
         }
     }
 
@@ -97,17 +104,14 @@ public class ModEvents {
         }, delay);
     }
 
-    // 死亡事件：处理异常物品的崩溃/断连与乱码消息
+    // 死亡事件
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player victim) {
-            // 自杀：伤害源为自己且主手持有异常物品
             if (victim.getMainHandItem().getItem() instanceof ExceptionItem exc
                 && event.getSource().getEntity() == null) {
                 applyExceptionEffect(victim, exc, true, event);
-            }
-            // 他杀：攻击者持有异常物品
-            else if (event.getSource().getEntity() instanceof Player attacker) {
+            } else if (event.getSource().getEntity() instanceof Player attacker) {
                 ItemStack weapon = attacker.getMainHandItem();
                 if (weapon.getItem() instanceof ExceptionItem exc) {
                     applyExceptionEffect(victim, exc, false, event);
@@ -117,7 +121,6 @@ public class ModEvents {
     }
 
     private static void applyExceptionEffect(Player victim, ExceptionItem exc, boolean isSuicide, LivingDeathEvent event) {
-        // 发送死亡消息
         Component deathMsg;
         if (isSuicide) {
             deathMsg = Component.literal(victim.getName().getString() + " ※ui꧂idᝰ >hy $%e y№u ￡o€n¥ t[i♯?");
@@ -130,12 +133,9 @@ public class ModEvents {
         }
         victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
 
-        // 根据异常类型触发效果
         if (exc.isCausesCrash()) {
-            // JVM 致命崩溃
             CrashHelper.crashJvm(exc.getExceptionName());
         } else {
-            // 网络错误：断开连接
             if (victim instanceof ServerPlayer sp) {
                 sp.connection.disconnect(Component.literal(exc.getExceptionName()));
             } else if (victim.level().isClientSide) {

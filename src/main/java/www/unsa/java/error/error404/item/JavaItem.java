@@ -1,8 +1,6 @@
 package www.unsa.java.error.error404.item;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
@@ -38,17 +36,6 @@ public class JavaItem extends Item {
             default -> "Ordinary";
         };
         setMode(stack, next);
-    }
-
-    @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-        if (player.isCrouching()) {
-            nextMode(stack);
-            player.displayClientMessage(Component.literal("Switched to " + getMode(stack)), true);
-            return InteractionResultHolder.success(stack);
-        }
-        return super.use(level, player, hand);
     }
 
     @Override
