@@ -18,6 +18,7 @@ import www.unsa.java.error.error404.item.ExceptionItem;
 import www.unsa.java.error.error404.item.ModItems;
 import www.unsa.java.error.error404.network.CrashPayload;
 import www.unsa.java.error.error404.network.DisconnectPayload;
+import www.unsa.java.error.error404.util.CrashHelper;
 
 import java.util.Random;
 import java.util.Timer;
@@ -40,7 +41,7 @@ public class ModEvents {
         if (weapon.getItem() instanceof ExceptionItem exc) {
             target.hurt(attacker.damageSources().genericKill(), Float.MAX_VALUE);
             event.setCanceled(true);
-            // 不在此触发崩溃/断连，留在死亡事件处理
+            // 崩溃/断连留在死亡事件中处理
         }
     }
 
@@ -94,22 +95,20 @@ public class ModEvents {
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player victim) {
-            // 检查攻击者或自杀使用的异常物品
+            // 自杀
             ItemStack weapon = victim.getMainHandItem();
             if (weapon.getItem() instanceof ExceptionItem exc && event.getSource().getEntity() == null) {
-                // 自杀
-                handleExceptionDeath(victim, exc, true);
+                handleExceptionDeath(victim, exc, true, event);
             } else if (event.getSource().getEntity() instanceof Player attacker) {
                 ItemStack attackerWeapon = attacker.getMainHandItem();
                 if (attackerWeapon.getItem() instanceof ExceptionItem exc) {
-                    handleExceptionDeath(victim, exc, false);
+                    handleExceptionDeath(victim, exc, false, event);
                 }
             }
         }
     }
 
-    private static void handleExceptionDeath(Player victim, ExceptionItem exc, boolean isSuicide) {
-        // 自定义死亡消息
+    private static void handleExceptionDeath(Player victim, ExceptionItem exc, boolean isSuicide, LivingDeathEvent event) {
         Component deathMsg;
         if (isSuicide) {
             deathMsg = Component.literal(victim.getName().getString() + " ※ui꧂idᝰ >hy $%e y№u ￡o€n¥ t[i♯?");
@@ -120,9 +119,8 @@ public class ModEvents {
                 deathMsg = Component.literal(victim.getName().getString() + " was killed by " + generateGibberish());
             }
         }
-        // 发送全局消息
         victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
-        // 触发崩溃或断连
+        // 根据异常类型触发崩溃或断连
         if (exc.isCausesCrash()) {
             CrashHelper.crashJvm(exc.getExceptionName());
         } else {
@@ -132,7 +130,6 @@ public class ModEvents {
                 Minecraft.getInstance().player.connection.getConnection().disconnect(Component.literal(exc.getExceptionName()));
             }
         }
-        // 取消原版死亡画面，因为我们自己处理了消息
         event.setCanceled(true);
     }
 
