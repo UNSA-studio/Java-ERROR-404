@@ -110,7 +110,7 @@ public class ModEvents {
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player victim) {
-            ExceptionItem exc = null;
+            final ExceptionItem exc;
             boolean isSuicide = false;
 
             // 判断自杀：伤害源为空且主手是异常物品
@@ -124,7 +124,11 @@ public class ModEvents {
                 ItemStack weapon = attacker.getMainHandItem();
                 if (weapon.getItem() instanceof ExceptionItem e) {
                     exc = e;
+                } else {
+                    exc = null;
                 }
+            } else {
+                exc = null;
             }
 
             if (exc != null) {
@@ -147,9 +151,10 @@ public class ModEvents {
                 // 根据异常类型触发效果
                 if (exc.isCausesCrash()) {
                     // 延迟 1 秒让死亡消息显示，再真实崩溃
+                    final String crashReason = exc.getExceptionName();
                     new Thread(() -> {
                         try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
-                        CrashHelper.crashJvm(exc.getExceptionName());
+                        CrashHelper.crashJvm(crashReason);
                     }).start();
                 } else {
                     // 立即断连（显示报错页面）
