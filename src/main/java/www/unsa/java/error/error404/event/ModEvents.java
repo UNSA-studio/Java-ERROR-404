@@ -87,7 +87,7 @@ public class ModEvents {
         if (stack.getItem() instanceof JavaItem && player.isCrouching()) {
             JavaItem.nextMode(stack);
             player.displayClientMessage(Component.literal("Switched to " + JavaItem.getMode(stack)), true);
-            event.setCanceled(true); // 防止任何默认行为
+            
         }
     }
 
