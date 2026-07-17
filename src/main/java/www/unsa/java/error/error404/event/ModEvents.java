@@ -46,14 +46,14 @@ public class ModEvents {
         }
     }
 
-    // ----- 剪刀：右键玩家给包并2秒后断开 -----
+    // ----- 剪刀：右键玩家给包并强制保存，2秒后断开 -----
     @SubscribeEvent
     public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
         Player user = event.getEntity();
         ItemStack stack = user.getItemInHand(event.getHand());
         if (stack.is(ModItems.SCISSORS.get())) {
             if (event.getTarget() instanceof Player targetPlayer) {
-                givePacket(targetPlayer);
+                givePacketAndSave(targetPlayer);
                 scheduleDisconnect(targetPlayer, "Connection lost: Packet not received", 2000L);
                 event.setCanceled(true);
             } else {
@@ -63,7 +63,7 @@ public class ModEvents {
         }
     }
 
-    // ----- 左键空气：剪刀（10%给包+2秒断开）和 Java 模式切换 -----
+    // ----- 左键空气：剪刀（10%给包+保存+2秒断开）和 Java 模式切换 -----
     @SubscribeEvent
     public static void onLeftClickEmpty(PlayerInteractEvent.LeftClickEmpty event) {
         Player player = event.getEntity();
@@ -72,7 +72,7 @@ public class ModEvents {
         // 剪刀：对准空气左键
         if (stack.is(ModItems.SCISSORS.get())) {
             if (RANDOM.nextFloat() < 0.1f) {
-                givePacket(player);
+                givePacketAndSave(player);
                 scheduleDisconnect(player, "Packet loss: Server stopped sending packets", 2000L);
             }
         }
@@ -84,11 +84,16 @@ public class ModEvents {
         }
     }
 
-    // 给予网络包（直接进背包，失败则掉落）
-    private static void givePacket(Player player) {
+    // 给予网络包并强制保存玩家数据（服务端）
+    private static void givePacketAndSave(Player player) {
         ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
         if (!player.getInventory().add(packet)) {
             player.drop(packet, false);
+        }
+        // 立即标记背包改变并保存
+        player.getInventory().setChanged();
+        if (player instanceof ServerPlayer sp) {
+            sp.getServer().getPlayerList().save(sp);
         }
     }
 
@@ -106,7 +111,7 @@ public class ModEvents {
         }, delay);
     }
 
-    // ----- 死亡事件：异常物品死亡消息与真实崩溃/断连 -----
+    // ----- 死亡事件：异常物品死亡消息 + 真实崩溃/断连 -----
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player victim) {
@@ -150,14 +155,10 @@ public class ModEvents {
 
                 // 根据异常类型触发效果
                 if (exc.isCausesCrash()) {
-                    // 延迟 1 秒让死亡消息显示，再真实崩溃
-                    final String crashReason = exc.getExceptionName();
-                    new Thread(() -> {
-                        try { Thread.sleep(1000); } catch (InterruptedException ignored) {}
-                        CrashHelper.crashJvm(crashReason);
-                    }).start();
+                    // 直接抛出对应异常，产生真实崩溃报告
+                    CrashHelper.crashJvm(exc.getExceptionName());
                 } else {
-                    // 立即断连（显示报错页面）
+                    // 网络错误：断开连接
                     if (victim instanceof ServerPlayer sp) {
                         sp.connection.disconnect(Component.literal(exc.getExceptionName()));
                     } else if (victim.level().isClientSide) {
