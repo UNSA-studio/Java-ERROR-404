@@ -13,7 +13,6 @@ public class CrashHelper {
      * 根据异常名称抛出真实的 Java 异常，导致游戏崩溃并生成对应崩溃报告。
      */
     public static void crashJvm(String exceptionName) {
-        // 调用前已确保在服务端/客户端均可，直接抛出对应异常
         switch (exceptionName) {
             case "NullPointerException": throw new NullPointerException("Simulated NPE from Java ERROR 404");
             case "ClassCastException": throw new ClassCastException("Simulated ClassCastException from Java ERROR 404");
@@ -41,7 +40,7 @@ public class CrashHelper {
             case "EmptyStackException": throw new RuntimeException(new EmptyStackException());
             case "MissingResourceException": throw new RuntimeException(new MissingResourceException("Missing resource", "", ""));
             case "InputMismatchException": throw new InputMismatchException("Simulated InputMismatchException from Java ERROR 404");
-            case "IllegalFormatException": throw new IllegalFormatException("Simulated IllegalFormatException from Java ERROR 404");
+            case "IllegalFormatException": throw new RuntimeException(new IllegalFormatException()); // 无参构造，包装后崩溃报告可见 IllegalFormatException
             case "InvalidPropertiesFormatException": throw new RuntimeException(new InvalidPropertiesFormatException("Simulated error"));
             case "IOException": throw new RuntimeException(new IOException("Simulated IOException from Java ERROR 404"));
             case "FileNotFoundException": throw new RuntimeException(new FileNotFoundException("Simulated FileNotFoundException from Java ERROR 404"));

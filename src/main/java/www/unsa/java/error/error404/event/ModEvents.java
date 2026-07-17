@@ -29,7 +29,6 @@ import java.util.TimerTask;
 public class ModEvents {
     private static final Random RANDOM = new Random();
 
-    // ----- 攻击秒杀 -----
     @SubscribeEvent
     public static void onAttackEntity(AttackEntityEvent event) {
         Player attacker = event.getEntity();
@@ -46,7 +45,6 @@ public class ModEvents {
         }
     }
 
-    // ----- 剪刀：右键玩家给包并强制保存，2秒后断开 -----
     @SubscribeEvent
     public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
         Player user = event.getEntity();
@@ -63,13 +61,11 @@ public class ModEvents {
         }
     }
 
-    // ----- 左键空气：剪刀（10%给包+保存+2秒断开）和 Java 模式切换 -----
     @SubscribeEvent
     public static void onLeftClickEmpty(PlayerInteractEvent.LeftClickEmpty event) {
         Player player = event.getEntity();
         ItemStack stack = player.getItemInHand(event.getHand());
 
-        // 剪刀：对准空气左键
         if (stack.is(ModItems.SCISSORS.get())) {
             if (RANDOM.nextFloat() < 0.1f) {
                 givePacketAndSave(player);
@@ -77,27 +73,20 @@ public class ModEvents {
             }
         }
 
-        // Java 物品：潜行 + 左键空气切换模式
         if (stack.getItem() instanceof JavaItem && player.isCrouching()) {
             JavaItem.nextMode(stack);
             player.displayClientMessage(Component.literal("Switched to " + JavaItem.getMode(stack)), true);
         }
     }
 
-    // 给予网络包并强制保存玩家数据（服务端）
     private static void givePacketAndSave(Player player) {
         ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
         if (!player.getInventory().add(packet)) {
             player.drop(packet, false);
         }
-        // 立即标记背包改变并保存
-        player.getInventory().setChanged();
-        if (player instanceof ServerPlayer sp) {
-            sp.getServer().getPlayerList().save(sp);
-        }
+        player.getInventory().setChanged(); // 标记脏数据，断线时自动保存
     }
 
-    // 延迟断连
     private static void scheduleDisconnect(Player player, String reason, long delay) {
         new Timer().schedule(new TimerTask() {
             @Override
@@ -111,21 +100,17 @@ public class ModEvents {
         }, delay);
     }
 
-    // ----- 死亡事件：异常物品死亡消息 + 真实崩溃/断连 -----
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player victim) {
             final ExceptionItem exc;
             boolean isSuicide = false;
 
-            // 判断自杀：伤害源为空且主手是异常物品
             if (victim.getMainHandItem().getItem() instanceof ExceptionItem e
                 && event.getSource().getEntity() == null) {
                 exc = e;
                 isSuicide = true;
-            }
-            // 判断他杀：攻击者持有异常物品
-            else if (event.getSource().getEntity() instanceof Player attacker) {
+            } else if (event.getSource().getEntity() instanceof Player attacker) {
                 ItemStack weapon = attacker.getMainHandItem();
                 if (weapon.getItem() instanceof ExceptionItem e) {
                     exc = e;
@@ -137,7 +122,6 @@ public class ModEvents {
             }
 
             if (exc != null) {
-                // 发送死亡消息
                 Component deathMsg;
                 if (isSuicide) {
                     deathMsg = Component.literal(victim.getName().getString() + " ※ui꧂idᝰ >hy $%e y№u ￡o€n¥ t[i♯?");
@@ -149,16 +133,11 @@ public class ModEvents {
                     }
                 }
                 victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
-
-                // 取消原版死亡界面
                 event.setCanceled(true);
 
-                // 根据异常类型触发效果
                 if (exc.isCausesCrash()) {
-                    // 直接抛出对应异常，产生真实崩溃报告
                     CrashHelper.crashJvm(exc.getExceptionName());
                 } else {
-                    // 网络错误：断开连接
                     if (victim instanceof ServerPlayer sp) {
                         sp.connection.disconnect(Component.literal(exc.getExceptionName()));
                     } else if (victim.level().isClientSide) {
@@ -169,7 +148,6 @@ public class ModEvents {
         }
     }
 
-    // 乱码生成
     private static String generateGibberish() {
         String chars = "W^y €r℡ y#꧁ %¢i꧂g t%i꧂ ※o №i*?";
         StringBuilder sb = new StringBuilder();
