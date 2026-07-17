@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "java_error_404:item/404"
+    "layer0": "java_error_404:item/java_item"
   }
 }
