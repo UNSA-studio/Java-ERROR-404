@@ -84,7 +84,7 @@ public class ModEvents {
         if (!player.getInventory().add(packet)) {
             player.drop(packet, false);
         }
-        player.getInventory().setChanged(); // 标记脏数据，断线时自动保存
+        player.getInventory().setChanged();
     }
 
     private static void scheduleDisconnect(Player player, String reason, long delay) {
@@ -135,9 +135,18 @@ public class ModEvents {
                 victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
                 event.setCanceled(true);
 
+                // 根据异常类型触发效果
                 if (exc.isCausesCrash()) {
-                    CrashHelper.crashJvm(exc.getExceptionName());
+                    // 致命异常：需要真实崩溃
+                    if (victim.level().isClientSide) {
+                        // 单人游戏或客户端，直接在本地抛出 Error 崩溃
+                        CrashHelper.crashJvm(exc.getExceptionName());
+                    } else {
+                        // 专用服务器，发送网络包到客户端让其崩溃
+                        PacketDistributor.sendToPlayer((ServerPlayer) victim, new CrashPayload());
+                    }
                 } else {
+                    // 非致命异常：断开连接
                     if (victim instanceof ServerPlayer sp) {
                         sp.connection.disconnect(Component.literal(exc.getExceptionName()));
                     } else if (victim.level().isClientSide) {
