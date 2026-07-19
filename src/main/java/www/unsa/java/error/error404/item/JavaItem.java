@@ -43,9 +43,8 @@ public class JavaItem extends Item {
         if (entity instanceof Player player) {
             String mode = getMode(stack);
             if (mode.equals("Ordinary") || mode.equals("Overload")) {
-                if (!level.isClientSide) {
-                    CrashHelper.crashJvm("ClassNotFoundException: Java not found");
-                }
+                // 直接触发真实崩溃，不等待任何返回值
+                CrashHelper.crashJvm("ClassNotFoundException");
             }
         }
         return super.finishUsingItem(stack, level, entity);
