@@ -1,99 +1,90 @@
 package www.unsa.java.error.error404.util;
 
+import java.util.*;
+
 public class CrashHelper {
     public static void crashJvm(String exceptionName) {
-        // 真正执行会导致对应异常的操作，使 JVM 崩溃
         switch (exceptionName) {
             case "NullPointerException":
                 Object o = null;
-                o.toString(); // 必定 NPE
+                o.toString();
                 break;
             case "ClassCastException":
                 Object obj = "string";
-                Integer i = (Integer) obj; // ClassCastException
+                Integer i = (Integer) obj;
                 break;
             case "ArrayIndexOutOfBoundsException":
                 int[] arr = new int[0];
-                int x = arr[1]; // 越界
+                int x = arr[1];
                 break;
             case "StringIndexOutOfBoundsException":
-                "".charAt(0); // 越界
+                "".charAt(0);
                 break;
             case "IllegalArgumentException":
                 throw new IllegalArgumentException("Simulated");
             case "IllegalStateException":
                 throw new IllegalStateException("Simulated");
             case "NumberFormatException":
-                Integer.parseInt("not a number"); // NumberFormatException
+                Integer.parseInt("not a number");
                 break;
             case "ArithmeticException":
-                int y = 1 / 0; // 除以零
+                int y = 1 / 0;
                 break;
             case "NegativeArraySizeException":
-                int[] neg = new int[-1]; // 负大小数组
+                int[] neg = new int[-1];
                 break;
             case "ClassNotFoundException":
-                Class.forName("non.existent.Class"); // 类找不到
+                try { Class.forName("non.existent.Class"); }
+                catch (ClassNotFoundException e) { throw new RuntimeException(e); }
                 break;
             case "NoClassDefFoundError":
-                // 模拟类存在但运行时定义丢失（较难，使用错误替代）
                 throw new NoClassDefFoundError("Simulated");
             case "NoSuchMethodError":
                 throw new NoSuchMethodError("Simulated");
             case "NoSuchFieldError":
                 throw new NoSuchFieldError("Simulated");
             case "OutOfMemoryError":
-                // 尝试分配巨大数组触发 OOM（可能真 OOM）
-                int[] big = new int[Integer.MAX_VALUE];
+                try { int[] big = new int[Integer.MAX_VALUE]; }
+                catch (Throwable t) { throw new OutOfMemoryError("Simulated"); }
                 break;
             case "StackOverflowError":
-                recursive(); // 无限递归
+                recursive();
                 break;
             case "UnsupportedOperationException":
                 throw new UnsupportedOperationException("Simulated");
             case "InterruptedException":
-                Thread.currentThread().interrupt();
                 throw new RuntimeException(new InterruptedException("Simulated"));
             case "ExceptionInInitializerError":
                 throw new ExceptionInInitializerError("Simulated");
             case "SecurityException":
                 throw new SecurityException("Simulated");
             case "IllegalAccessException":
-                // 反射访问私有成员
                 try {
                     var f = String.class.getDeclaredField("value");
-                    f.setAccessible(true); // 可能被禁止
+                    f.setAccessible(true);
                     f.get("test");
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                } catch (Exception e) { throw new RuntimeException(e); }
                 break;
             case "InstantiationException":
-                try {
-                    Class.forName("java.lang.Integer").newInstance(); // 无默认构造
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+                try { Class.forName("java.lang.Integer").newInstance(); }
+                catch (Exception e) { throw new RuntimeException(e); }
                 break;
             case "ConcurrentModificationException":
-                java.util.List<String> list = new java.util.ArrayList<>();
+                List<String> list = new ArrayList<>();
                 list.add("a");
-                for (String s : list) {
-                    list.remove(s); // 并发修改
-                }
+                for (String s : list) { list.remove(s); }
                 break;
             case "NoSuchElementException":
-                new java.util.ArrayList<>().iterator().next(); // 无元素
+                new ArrayList<>().iterator().next();
                 break;
             case "EmptyStackException":
-                new java.util.Stack<>().pop(); // 空栈
+                new Stack<>().pop();
                 break;
             case "MissingResourceException":
-                throw new RuntimeException(new java.util.MissingResourceException("Simulated", "", ""));
+                throw new RuntimeException(new MissingResourceException("Simulated", "", ""));
             case "InputMismatchException":
-                throw new java.util.InputMismatchException("Simulated");
+                throw new InputMismatchException("Simulated");
             case "IllegalFormatException":
-                // 使用错误的格式化
                 String.format("%d", "string");
                 break;
             case "InvalidPropertiesFormatException":
@@ -139,7 +130,5 @@ public class CrashHelper {
         }
     }
 
-    private static void recursive() {
-        recursive();
-    }
+    private static void recursive() { recursive(); }
 }
