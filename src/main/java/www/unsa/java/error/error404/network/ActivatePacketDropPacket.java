@@ -16,6 +16,6 @@ public record ActivatePacketDropPacket() implements CustomPacketPayload {
     public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(ActivatePacketDropPacket payload, IPayloadContext context) {
-        context.workHandler().submitAsync(MixinClientPacketListener::activateDrop);
+        context.enqueueWork(MixinClientPacketListener::activateDrop);
     }
 }

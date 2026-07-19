@@ -64,7 +64,7 @@ public enum CrashType {
             case ARRAY_INDEX_OUT_OF_BOUNDS -> { int[] arr = new int[1]; int x = arr[10]; }
             case STRING_INDEX_OUT_OF_BOUNDS -> { "abc".charAt(10); }
             case ILLEGAL_ARGUMENT -> { try { Thread.sleep(-1); } catch (InterruptedException e) {} }
-            case ILLEGAL_STATE -> { Thread.currentThread().stop(); }
+            case ILLEGAL_STATE -> { throw new IllegalStateException("Simulated IllegalStateException"); }
             case NUMBER_FORMAT -> { Integer.parseInt("abc"); }
             case ARITHMETIC -> { int x = 1 / 0; }
             case NEGATIVE_ARRAY_SIZE -> { byte[] b = new byte[-1]; }
@@ -77,7 +77,7 @@ public enum CrashType {
             case UNSUPPORTED_OPERATION -> { List.of(1,2).add(3); }
             case INTERRUPTED -> { Thread.currentThread().interrupt(); try { Thread.sleep(1000); } catch (InterruptedException ignored) {} }
             case EXCEPTION_IN_INITIALIZER -> { class Bad { static { int x = 1/0; } } new Bad(); }
-            case SECURITY -> { System.setSecurityManager(new SecurityManager()); }
+            case SECURITY -> { throw new SecurityException("Simulated SecurityException"); }
             case ILLEGAL_ACCESS -> {
                 try {
                     java.lang.reflect.Field f = String.class.getDeclaredField("value");

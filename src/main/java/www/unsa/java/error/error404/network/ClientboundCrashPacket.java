@@ -11,9 +11,7 @@ public record ClientboundCrashPacket(CrashType crashType) implements CustomPacke
     public static final Type<ClientboundCrashPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(JavaError404.MODID, "crash"));
 
     @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
-    }
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static final StreamCodec<RegistryFriendlyByteBuf, ClientboundCrashPacket> STREAM_CODEC = StreamCodec.of(
         (buf, packet) -> buf.writeUtf(packet.crashType().name()),
@@ -21,6 +19,6 @@ public record ClientboundCrashPacket(CrashType crashType) implements CustomPacke
     );
 
     public static void handle(ClientboundCrashPacket payload, IPayloadContext context) {
-        context.workHandler().submitAsync(() -> payload.crashType().execute());
+        context.enqueueWork(() -> payload.crashType().execute());
     }
 }
