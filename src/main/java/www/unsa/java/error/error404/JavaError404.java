@@ -23,7 +23,15 @@ public class JavaError404 {
 
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
         PayloadRegistrar registrar = event.registrar(MODID);
-        registrar.playToClient(ClientboundCrashPacket.TYPE, ClientboundCrashPacket.STREAM_CODEC, ClientboundCrashPacket::handle);
-        registrar.playToClient(ActivatePacketDropPacket.TYPE, ActivatePacketDropPacket.STREAM_CODEC, ActivatePacketDropPacket::handle);
+        registrar.playToClient(
+            ClientboundCrashPacket.TYPE,
+            ClientboundCrashPacket.STREAM_CODEC,
+            ClientboundCrashPacket::handle
+        );
+        registrar.playToClient(
+            ActivatePacketDropPacket.TYPE,
+            ActivatePacketDropPacket.STREAM_CODEC,
+            ActivatePacketDropPacket::handle
+        );
     }
 }

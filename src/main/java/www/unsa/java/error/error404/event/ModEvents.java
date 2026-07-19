@@ -29,9 +29,7 @@ import java.util.UUID;
 @EventBusSubscriber(modid = JavaError404.MODID)
 public class ModEvents {
     private static final Random RANDOM = new Random();
-    // 存储剪刀使用次数（服务端）
     private static final Map<UUID, Integer> SCISSOR_COUNT = new HashMap<>();
-    // 存储等待给予物品的状态
     private static final String TAG_PENDING_PACKET = "java_error_404_pending_packet";
 
     @SubscribeEvent
@@ -86,35 +84,27 @@ public class ModEvents {
         UUID uuid = user.getUUID();
         int count = SCISSOR_COUNT.getOrDefault(uuid, 0) + 1;
         SCISSOR_COUNT.put(uuid, count);
-        // 概率 = min(count * 5%, 80%)
         double probability = Math.min(count * 0.05, 0.8);
         if (RANDOM.nextDouble() < probability) {
-            // 触发丢包
-            SCISSOR_COUNT.remove(uuid); // 重置计数
-            // 给目标玩家添加状态（持久化）
+            SCISSOR_COUNT.remove(uuid);
             ServerPlayer spTarget = (target instanceof ServerPlayer) ? (ServerPlayer) target : spUser;
             CompoundTag data = spTarget.getPersistentData();
             data.putBoolean(TAG_PENDING_PACKET, true);
-            // 发送激活丢包数据包
             PacketDistributor.sendToPlayer(spTarget, new ActivatePacketDropPacket());
-            // 注意：不直接给予物品，等玩家重连后再给
         }
     }
 
-    // 玩家登录事件
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
             CompoundTag data = sp.getPersistentData();
             if (data.getBoolean(TAG_PENDING_PACKET)) {
                 data.remove(TAG_PENDING_PACKET);
-                // 给予网络包
                 ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
                 if (!sp.getInventory().add(packet)) {
                     sp.drop(packet, false);
                 }
                 sp.getInventory().setChanged();
-                // 清除剪刀计数（可选）
                 SCISSOR_COUNT.remove(sp.getUUID());
             }
         }
@@ -156,19 +146,18 @@ public class ModEvents {
                 event.setCanceled(true);
 
                 if (exc.isCausesCrash()) {
-                    // 发送崩溃数据包到客户端
                     if (victim instanceof ServerPlayer sp) {
                         PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(exc.getCrashType()));
                     } else if (victim.level().isClientSide) {
-                        // 单人游戏直接执行
                         exc.getCrashType().execute();
                     }
                 } else {
-                    // 非致命：断连
                     if (victim instanceof ServerPlayer sp) {
                         sp.connection.disconnect(Component.literal(exc.getCrashType().name()));
                     } else if (victim.level().isClientSide) {
-                        victim.connection.getConnection().disconnect(Component.literal(exc.getCrashType().name()));
+                        // 使用 LocalPlayer 断开连接
+                        net.minecraft.client.Minecraft.getInstance().player.connection.getConnection()
+                            .disconnect(Component.literal(exc.getCrashType().name()));
                     }
                 }
             }
