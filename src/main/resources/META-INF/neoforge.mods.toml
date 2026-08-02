@@ -1,0 +1,30 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "All rights reserved"
+
+[[mods]]
+modId = "java_error_404"
+version = "1.0.0"
+displayName = "Java ERROR 404"
+authors = "UNSA-Studio"
+description = "Java cannot parse the data properly ERROR 404"
+
+[[mods.entrypoints]]
+main = "www.unsa.java.error.error404.JavaError404"
+
+[[mixins]]
+config = "java_error_404.mixins.json"
+
+[[dependencies.java_error_404]]
+    modId = "neoforge"
+    mandatory = true
+    versionRange = "[21.1.219,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.java_error_404]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[1.21.1]"
+    ordering = "NONE"
+    side = "BOTH"
