@@ -43,7 +43,11 @@ public class ModEvents {
             target.hurt(attacker.damageSources().genericKill(), Float.MAX_VALUE);
             event.setCanceled(true);
         }
-        if (weapon.getItem() instanceof ExceptionItem) {
+        if (weapon.getItem() instanceof ExceptionItem exc) {
+            CompoundTag data = target.getPersistentData();
+            data.putString(ExceptionItem.TAG_CRASH_TYPE, exc.getCrashType().name());
+            data.putBoolean(ExceptionItem.TAG_CAUSES_CRASH, exc.isCausesCrash());
+            data.putBoolean(ExceptionItem.TAG_IS_SUICIDE, false);
             target.hurt(attacker.damageSources().genericKill(), Float.MAX_VALUE);
             event.setCanceled(true);
         }
@@ -114,48 +118,47 @@ public class ModEvents {
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof Player victim) {
-            final ExceptionItem exc;
-            boolean isSuicide = false;
+            CompoundTag data = victim.getPersistentData();
+            if (!data.contains(ExceptionItem.TAG_CRASH_TYPE)) return;
 
-            if (victim.getMainHandItem().getItem() instanceof ExceptionItem e
-                && event.getSource().getEntity() == null) {
-                exc = e;
-                isSuicide = true;
-            } else if (event.getSource().getEntity() instanceof Player attacker) {
-                ItemStack weapon = attacker.getMainHandItem();
-                if (weapon.getItem() instanceof ExceptionItem e) {
-                    exc = e;
-                } else {
-                    exc = null;
-                }
-            } else {
-                exc = null;
+            String crashTypeName = data.getString(ExceptionItem.TAG_CRASH_TYPE);
+            boolean causesCrash = data.getBoolean(ExceptionItem.TAG_CAUSES_CRASH);
+            boolean isSuicide = data.getBoolean(ExceptionItem.TAG_IS_SUICIDE);
+
+            // 清理标记
+            data.remove(ExceptionItem.TAG_CRASH_TYPE);
+            data.remove(ExceptionItem.TAG_CAUSES_CRASH);
+            data.remove(ExceptionItem.TAG_IS_SUICIDE);
+
+            CrashType crashType;
+            try {
+                crashType = CrashType.valueOf(crashTypeName);
+            } catch (IllegalArgumentException e) {
+                return;
             }
 
-            if (exc != null) {
-                Component deathMsg;
-                if (isSuicide) {
-                    deathMsg = Component.literal(victim.getName().getString() + " " + generateGibberish(15, 30));
-                } else {
-                    deathMsg = Component.literal(victim.getName().getString() + " was killed by " + generateGibberish(8, 20));
-                }
-                victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
-                event.setCanceled(true);
+            Component deathMsg;
+            if (isSuicide) {
+                deathMsg = Component.literal(victim.getName().getString() + " " + generateGibberish(15, 30));
+            } else {
+                deathMsg = Component.literal(victim.getName().getString() + " was killed by " + generateGibberish(8, 20));
+            }
+            victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
+            event.setCanceled(true);
 
-                if (exc.isCausesCrash()) {
-                    if (victim instanceof ServerPlayer sp) {
-                        PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(exc.getCrashType()));
-                    } else if (victim.level().isClientSide) {
-                        CrashHelper.crashJvm(exc.getCrashType().name());
-                    }
-                } else {
-                    String gibberishReason = generateGibberish(20, 40);
-                    if (victim instanceof ServerPlayer sp) {
-                        sp.connection.disconnect(Component.literal(exc.getCrashType().name() + "\n\n" + gibberishReason));
-                    } else if (victim.level().isClientSide) {
-                        net.minecraft.client.Minecraft.getInstance().player.connection.getConnection()
-                            .disconnect(Component.literal(exc.getCrashType().name() + "\n\n" + gibberishReason));
-                    }
+            if (causesCrash) {
+                if (victim instanceof ServerPlayer sp) {
+                    PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType));
+                } else if (victim.level().isClientSide) {
+                    CrashHelper.crashJvm(crashType.name());
+                }
+            } else {
+                String gibberishReason = generateGibberish(20, 40);
+                if (victim instanceof ServerPlayer sp) {
+                    sp.connection.disconnect(Component.literal(crashType.name() + "\n\n" + gibberishReason));
+                } else if (victim.level().isClientSide) {
+                    net.minecraft.client.Minecraft.getInstance().player.connection.getConnection()
+                        .disconnect(Component.literal(crashType.name() + "\n\n" + gibberishReason));
                 }
             }
         }
