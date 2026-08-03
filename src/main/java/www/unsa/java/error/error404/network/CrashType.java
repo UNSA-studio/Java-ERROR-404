@@ -134,4 +134,57 @@ public enum CrashType {
             case HTTP_RETRY -> { throw new RuntimeException(new HttpRetryException("", 503)); }
         }
     }
+
+    public String javaException() {
+        return switch (this) {
+            case NULL_POINTER -> "java.lang.NullPointerException";
+            case CLASS_CAST -> "java.lang.ClassCastException";
+            case ARRAY_INDEX_OUT_OF_BOUNDS -> "java.lang.ArrayIndexOutOfBoundsException";
+            case STRING_INDEX_OUT_OF_BOUNDS -> "java.lang.StringIndexOutOfBoundsException";
+            case ILLEGAL_ARGUMENT -> "java.lang.IllegalArgumentException";
+            case ILLEGAL_STATE -> "java.lang.IllegalStateException";
+            case NUMBER_FORMAT -> "java.lang.NumberFormatException";
+            case ARITHMETIC -> "java.lang.ArithmeticException";
+            case NEGATIVE_ARRAY_SIZE -> "java.lang.NegativeArraySizeException";
+            case CLASS_NOT_FOUND -> "java.lang.ClassNotFoundException";
+            case NO_CLASS_DEF_FOUND -> "java.lang.NoClassDefFoundError";
+            case NO_SUCH_METHOD -> "java.lang.NoSuchMethodError";
+            case NO_SUCH_FIELD -> "java.lang.NoSuchFieldError";
+            case OUT_OF_MEMORY -> "java.lang.OutOfMemoryError";
+            case STACK_OVERFLOW -> "java.lang.StackOverflowError";
+            case UNSUPPORTED_OPERATION -> "java.lang.UnsupportedOperationException";
+            case INTERRUPTED -> "java.lang.InterruptedException";
+            case EXCEPTION_IN_INITIALIZER -> "java.lang.ExceptionInInitializerError";
+            case SECURITY -> "java.lang.SecurityException";
+            case ILLEGAL_ACCESS -> "java.lang.IllegalAccessException";
+            case INSTANTIATION -> "java.lang.InstantiationException";
+            case CONCURRENT_MODIFICATION -> "java.util.ConcurrentModificationException";
+            case NO_SUCH_ELEMENT -> "java.util.NoSuchElementException";
+            case EMPTY_STACK -> "java.util.EmptyStackException";
+            case TOO_MANY_LISTENERS -> "java.util.TooManyListenersException";
+            case MISSING_RESOURCE -> "java.util.MissingResourceException";
+            case INPUT_MISMATCH -> "java.util.InputMismatchException";
+            case ILLEGAL_FORMAT -> "java.util.IllegalFormatException";
+            case INVALID_PROPERTIES_FORMAT -> "java.util.InvalidPropertiesFormatException";
+            case IO -> "java.io.IOException";
+            case FILE_NOT_FOUND -> "java.io.FileNotFoundException";
+            case EOF -> "java.io.EOFException";
+            case UTF_DATA_FORMAT -> "java.io.UTFDataFormatException";
+            case NOT_SERIALIZABLE -> "java.io.NotSerializableException";
+            case STREAM_CORRUPTED -> "java.io.StreamCorruptedException";
+            case INTERRUPTED_IO -> "java.io.InterruptedIOException";
+            case BUFFER_OVERFLOW -> "java.nio.BufferOverflowException";
+            case BUFFER_UNDERFLOW -> "java.nio.BufferUnderflowException";
+            case READ_ONLY_BUFFER -> "java.nio.ReadOnlyBufferException";
+            case FILE_SYSTEM -> "java.nio.file.FileSystemException";
+            case CLOSED_CHANNEL -> "java.nio.channels.ClosedChannelException";
+            case CLOSED_FILE_SYSTEM -> "java.nio.file.ClosedFileSystemException";
+            case SOCKET -> "java.net.SocketException";
+            case UNKNOWN_HOST -> "java.net.UnknownHostException";
+            case CONNECT -> "java.net.ConnectException";
+            case BIND -> "java.net.BindException";
+            case MALFORMED_URL -> "java.net.MalformedURLException";
+            case HTTP_RETRY -> "java.net.HttpRetryException";
+        };
+    }
 }

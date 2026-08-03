@@ -153,12 +153,13 @@ public class ModEvents {
                 CrashHelper.crashJvm(crashType::execute);
             }
         } else {
-            String gibberishReason = generateGibberish(20, 40);
             if (victim instanceof ServerPlayer sp) {
-                sp.connection.disconnect(Component.literal(crashType.name() + "\n\n" + gibberishReason));
+                sp.connection.disconnect(Component.translatable("disconnect.genericReason",
+                    crashType.javaException() + "\n\n" + generateGibberish(30, 50)));
             } else if (victim.level().isClientSide) {
                 net.minecraft.client.Minecraft.getInstance().player.connection.getConnection()
-                    .disconnect(Component.literal(crashType.name() + "\n\n" + gibberishReason));
+                    .disconnect(Component.translatable("disconnect.genericReason",
+                        crashType.javaException() + "\n\n" + generateGibberish(30, 50)));
             }
         }
     }
