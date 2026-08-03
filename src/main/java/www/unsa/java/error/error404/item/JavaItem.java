@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
+import www.unsa.java.error.error404.network.CrashType;
 import www.unsa.java.error.error404.util.CrashHelper;
 
 import java.util.List;
@@ -43,8 +44,7 @@ public class JavaItem extends Item {
         if (entity instanceof Player player) {
             String mode = getMode(stack);
             if (mode.equals("Ordinary") || mode.equals("Overload")) {
-                // 直接触发真实崩溃，不等待任何返回值
-                CrashHelper.crashJvm("ClassNotFoundException");
+                CrashHelper.crashJvm(CrashType.CLASS_NOT_FOUND::execute);
             }
         }
         return super.finishUsingItem(stack, level, entity);
