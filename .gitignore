@@ -28,3 +28,4 @@ logs/
 
 # NeoForge
 .neogradle/
+src/main/resources/assets/java_error_404/textures/item/404.png

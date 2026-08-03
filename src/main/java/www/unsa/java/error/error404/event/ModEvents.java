@@ -148,18 +148,15 @@ public class ModEvents {
 
         if (causesCrash) {
             if (victim instanceof ServerPlayer sp) {
-                PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType));
+                PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType, true));
             } else if (victim.level().isClientSide) {
                 CrashHelper.crashJvm(crashType::execute);
             }
         } else {
             if (victim instanceof ServerPlayer sp) {
-                sp.connection.disconnect(Component.translatable("disconnect.genericReason",
-                    crashType.javaException() + "\n\n" + generateGibberish(30, 50)));
+                PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType, false));
             } else if (victim.level().isClientSide) {
-                net.minecraft.client.Minecraft.getInstance().player.connection.getConnection()
-                    .disconnect(Component.translatable("disconnect.genericReason",
-                        crashType.javaException() + "\n\n" + generateGibberish(30, 50)));
+                net.minecraft.client.Minecraft.getInstance().execute(crashType::execute);
             }
         }
     }
