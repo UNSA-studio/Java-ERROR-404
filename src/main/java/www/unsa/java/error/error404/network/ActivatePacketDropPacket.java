@@ -10,7 +10,8 @@ import www.unsa.java.error.error404.util.PacketDropHelper;
 
 public record ActivatePacketDropPacket() implements CustomPacketPayload {
     public static final Type<ActivatePacketDropPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(JavaError404.MODID, "activate_drop"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, ActivatePacketDropPacket> STREAM_CODEC = StreamCodec.unit(new ActivatePacketDropPacket());
+    public static final StreamCodec<RegistryFriendlyByteBuf, ActivatePacketDropPacket> STREAM_CODEC =
+        StreamCodec.<RegistryFriendlyByteBuf, ActivatePacketDropPacket>unit(new ActivatePacketDropPacket());
 
     @Override
     public Type<? extends CustomPacketPayload> type() { return TYPE; }

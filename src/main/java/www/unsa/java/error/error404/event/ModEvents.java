@@ -20,18 +20,20 @@ import www.unsa.java.error.error404.item.JavaItem;
 import www.unsa.java.error.error404.item.ModItems;
 import www.unsa.java.error.error404.network.ActivatePacketDropPacket;
 import www.unsa.java.error.error404.network.ClientboundCrashPacket;
+import www.unsa.java.error.error404.network.CrashType;
 import www.unsa.java.error.error404.util.CrashHelper;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @EventBusSubscriber(modid = JavaError404.MODID)
 public class ModEvents {
     private static final Random RANDOM = new Random();
     private static final Map<UUID, Integer> SCISSOR_COUNT = new HashMap<>();
-    private static final String TAG_PENDING_PACKET = "java_error_404_pending_packet";
+    private static final Map<UUID, Boolean> PENDING_PACKETS = new ConcurrentHashMap<>();
 
     @SubscribeEvent
     public static void onAttackEntity(AttackEntityEvent event) {
@@ -93,8 +95,7 @@ public class ModEvents {
         if (RANDOM.nextDouble() < probability) {
             SCISSOR_COUNT.remove(uuid);
             ServerPlayer spTarget = (target instanceof ServerPlayer) ? (ServerPlayer) target : spUser;
-            CompoundTag data = spTarget.getPersistentData();
-            data.putBoolean(TAG_PENDING_PACKET, true);
+            PENDING_PACKETS.put(spTarget.getUUID(), true);
             PacketDistributor.sendToPlayer(spTarget, new ActivatePacketDropPacket());
         }
     }
@@ -102,15 +103,14 @@ public class ModEvents {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
-            CompoundTag data = sp.getPersistentData();
-            if (data.getBoolean(TAG_PENDING_PACKET)) {
-                data.remove(TAG_PENDING_PACKET);
+            UUID uuid = sp.getUUID();
+            if (PENDING_PACKETS.remove(uuid) != null) {
                 ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
                 if (!sp.getInventory().add(packet)) {
                     sp.drop(packet, false);
                 }
                 sp.getInventory().setChanged();
-                SCISSOR_COUNT.remove(sp.getUUID());
+                SCISSOR_COUNT.remove(uuid);
             }
         }
     }
