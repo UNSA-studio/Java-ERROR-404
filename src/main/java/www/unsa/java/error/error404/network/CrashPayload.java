@@ -18,7 +18,7 @@ public record CrashPayload() implements CustomPacketPayload {
 
     public static void handle(CrashPayload payload, IPayloadContext context) {
         context.enqueueWork(() -> CrashHelper.crashJvm(() -> {
-            throw new RuntimeException("Remote crash triggered by Java ERROR 404");
+            throw new RuntimeException("java.lang.RuntimeException");
         }));
     }
 }

@@ -64,12 +64,12 @@ public enum CrashType {
             case ARRAY_INDEX_OUT_OF_BOUNDS -> { int[] arr = new int[1]; int x = arr[10]; }
             case STRING_INDEX_OUT_OF_BOUNDS -> { "abc".charAt(10); }
             case ILLEGAL_ARGUMENT -> { try { Thread.sleep(-1); } catch (InterruptedException e) {} }
-            case ILLEGAL_STATE -> { throw new IllegalStateException("IllegalStateException triggered by Java ERROR 404"); }
+            case ILLEGAL_STATE -> { throw new IllegalStateException(); }
             case NUMBER_FORMAT -> { Integer.parseInt("abc"); }
             case ARITHMETIC -> { int x = 1 / 0; }
             case NEGATIVE_ARRAY_SIZE -> { byte[] b = new byte[-1]; }
             case CLASS_NOT_FOUND -> { try { Class.forName("non.existent.Cls"); } catch (ClassNotFoundException e) { throw new RuntimeException(e); } }
-            case NO_CLASS_DEF_FOUND -> { try { Class.forName("sun.misc.Unsafe"); } catch (ClassNotFoundException e) { throw new NoClassDefFoundError("Missing class"); } }
+            case NO_CLASS_DEF_FOUND -> { try { Class.forName("sun.misc.Unsafe"); } catch (ClassNotFoundException e) { throw new NoClassDefFoundError(); } }
             case NO_SUCH_METHOD -> { try { String.class.getMethod("nonExistentMethod"); } catch (NoSuchMethodException e) { throw new RuntimeException(e); } }
             case NO_SUCH_FIELD -> { try { String.class.getField("nonExistentField"); } catch (NoSuchFieldException e) { throw new RuntimeException(e); } }
             case OUT_OF_MEMORY -> { List<byte[]> leak = new ArrayList<>(); while(true) leak.add(new byte[1024 * 1024]); }
@@ -77,7 +77,7 @@ public enum CrashType {
             case UNSUPPORTED_OPERATION -> { List.of(1,2).add(3); }
             case INTERRUPTED -> { Thread.currentThread().interrupt(); try { Thread.sleep(1000); } catch (InterruptedException ignored) {} }
             case EXCEPTION_IN_INITIALIZER -> { class Bad { static { int x = 1/0; } } new Bad(); }
-            case SECURITY -> { throw new SecurityException("SecurityException triggered by Java ERROR 404"); }
+            case SECURITY -> { throw new SecurityException(); }
             case ILLEGAL_ACCESS -> {
                 try {
                     java.lang.reflect.Field f = String.class.getDeclaredField("value");
@@ -94,7 +94,7 @@ public enum CrashType {
             case INPUT_MISMATCH -> { new Scanner("abc").nextInt(); }
             case ILLEGAL_FORMAT -> { new Formatter().format("%d", "string"); }
             case INVALID_PROPERTIES_FORMAT -> { try { new Properties().load(new StringReader("=")); } catch (IOException e) { throw new RuntimeException(e); } }
-            case IO -> { try { throw new IOException("IOException triggered by Java ERROR 404"); } catch (IOException e) { throw new RuntimeException(e); } }
+            case IO -> { try { throw new IOException(); } catch (IOException e) { throw new RuntimeException(e); } }
             case FILE_NOT_FOUND -> { try { new FileInputStream("non_existent"); } catch (FileNotFoundException e) { throw new RuntimeException(e); } }
             case EOF -> { try { new DataInputStream(new ByteArrayInputStream(new byte[0])).readUTF(); } catch (IOException e) { throw new RuntimeException(e); } }
             case UTF_DATA_FORMAT -> {
@@ -106,8 +106,8 @@ public enum CrashType {
                 } catch (IOException e) { throw new RuntimeException(e); }
             }
             case NOT_SERIALIZABLE -> { try { new ObjectOutputStream(new ByteArrayOutputStream()).writeObject(new Object()); } catch (IOException e) { throw new RuntimeException(e); } }
-            case STREAM_CORRUPTED -> { throw new RuntimeException(new StreamCorruptedException("Corrupt")); }
-            case INTERRUPTED_IO -> { throw new RuntimeException(new InterruptedIOException("Interrupted")); }
+            case STREAM_CORRUPTED -> { throw new RuntimeException(new StreamCorruptedException()); }
+            case INTERRUPTED_IO -> { throw new RuntimeException(new InterruptedIOException()); }
             case BUFFER_OVERFLOW -> { ByteBuffer.allocate(1).put(new byte[10]); }
             case BUFFER_UNDERFLOW -> { ByteBuffer.allocate(1).getInt(); }
             case READ_ONLY_BUFFER -> { ByteBuffer.allocate(1).asReadOnlyBuffer().put((byte)1); }
@@ -131,7 +131,7 @@ public enum CrashType {
             case CONNECT -> { try { new Socket("127.0.0.1", 12345).connect(null, 100); } catch (IOException e) { throw new RuntimeException(e); } }
             case BIND -> { try { new ServerSocket(80).close(); } catch (IOException e) { throw new RuntimeException(e); } }
             case MALFORMED_URL -> { try { new URL("http://"); } catch (MalformedURLException e) { throw new RuntimeException(e); } }
-            case HTTP_RETRY -> { throw new RuntimeException(new HttpRetryException("Retry", 503)); }
+            case HTTP_RETRY -> { throw new RuntimeException(new HttpRetryException("", 503)); }
         }
     }
 }
