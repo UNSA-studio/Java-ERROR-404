@@ -2,7 +2,6 @@ package www.unsa.java.error.error404.network;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
@@ -21,11 +20,9 @@ public record ActivatePacketDropPacket() implements CustomPacketPayload {
     public static void handle(ActivatePacketDropPacket payload, IPayloadContext context) {
         context.enqueueWork(() -> {
             PacketDropHelper.activateDrop();
-            if (Minecraft.getInstance().getConnection() != null) {
-                Minecraft.getInstance().getConnection().getConnection()
-                    .disconnect(Component.translatable("disconnect.genericReason",
-                        "Internal Exception: io.netty.handler.codec.DecoderException: java.io.IOException: Packet was discarded"));
-            }
+            Minecraft.getInstance().execute(() -> {
+                throw new RuntimeException("Internal Exception: io.netty.handler.codec.DecoderException: java.io.IOException: Packet was discarded");
+            });
         });
     }
 }

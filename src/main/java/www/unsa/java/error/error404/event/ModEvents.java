@@ -18,6 +18,7 @@ import www.unsa.java.error.error404.JavaError404;
 import www.unsa.java.error.error404.item.ExceptionItem;
 import www.unsa.java.error.error404.item.JavaItem;
 import www.unsa.java.error.error404.item.ModItems;
+import www.unsa.java.error.error404.network.ActivatePacketDropPacket;
 import www.unsa.java.error.error404.network.ClientboundCrashPacket;
 import www.unsa.java.error.error404.network.CrashType;
 import www.unsa.java.error.error404.util.CrashHelper;
@@ -95,8 +96,7 @@ public class ModEvents {
             SCISSOR_COUNT.remove(uuid);
             ServerPlayer spTarget = (target instanceof ServerPlayer) ? (ServerPlayer) target : spUser;
             PENDING_PACKETS.put(spTarget.getUUID(), true);
-            spTarget.connection.disconnect(Component.translatable("disconnect.genericReason",
-                "Internal Exception: io.netty.handler.codec.DecoderException: java.io.IOException: Packet was discarded"));
+            PacketDistributor.sendToPlayer(spTarget, new ActivatePacketDropPacket());
         }
     }
 
@@ -154,8 +154,7 @@ public class ModEvents {
             }
         } else {
             if (victim instanceof ServerPlayer sp) {
-                sp.connection.disconnect(Component.translatable("disconnect.genericReason",
-                    crashType.javaException()));
+                PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType, false));
             } else if (victim.level().isClientSide) {
                 net.minecraft.client.Minecraft.getInstance().execute(crashType::execute);
             }
