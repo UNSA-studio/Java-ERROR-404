@@ -117,49 +117,48 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        if (event.getEntity() instanceof Player victim) {
-            CompoundTag data = victim.getPersistentData();
-            if (!data.contains(ExceptionItem.TAG_CRASH_TYPE)) return;
+        if (!(event.getEntity() instanceof Player victim)) return;
 
-            String crashTypeName = data.getString(ExceptionItem.TAG_CRASH_TYPE);
-            boolean causesCrash = data.getBoolean(ExceptionItem.TAG_CAUSES_CRASH);
-            boolean isSuicide = data.getBoolean(ExceptionItem.TAG_IS_SUICIDE);
+        CompoundTag data = victim.getPersistentData();
+        if (!data.contains(ExceptionItem.TAG_CRASH_TYPE)) return;
 
-            // 清理标记
-            data.remove(ExceptionItem.TAG_CRASH_TYPE);
-            data.remove(ExceptionItem.TAG_CAUSES_CRASH);
-            data.remove(ExceptionItem.TAG_IS_SUICIDE);
+        String crashTypeName = data.getString(ExceptionItem.TAG_CRASH_TYPE);
+        boolean causesCrash = data.getBoolean(ExceptionItem.TAG_CAUSES_CRASH);
+        boolean isSuicide = data.getBoolean(ExceptionItem.TAG_IS_SUICIDE);
 
-            CrashType crashType;
-            try {
-                crashType = CrashType.valueOf(crashTypeName);
-            } catch (IllegalArgumentException e) {
-                return;
+        data.remove(ExceptionItem.TAG_CRASH_TYPE);
+        data.remove(ExceptionItem.TAG_CAUSES_CRASH);
+        data.remove(ExceptionItem.TAG_IS_SUICIDE);
+
+        CrashType crashType;
+        try {
+            crashType = CrashType.valueOf(crashTypeName);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+
+        Component deathMsg;
+        if (isSuicide) {
+            deathMsg = Component.literal(victim.getName().getString() + " " + generateGibberish(15, 30));
+        } else {
+            deathMsg = Component.literal(victim.getName().getString() + " was killed by " + generateGibberish(8, 20));
+        }
+        victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
+        event.setCanceled(true);
+
+        if (causesCrash) {
+            if (victim instanceof ServerPlayer sp) {
+                PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType));
+            } else if (victim.level().isClientSide) {
+                CrashHelper.crashJvm(crashType::execute);
             }
-
-            Component deathMsg;
-            if (isSuicide) {
-                deathMsg = Component.literal(victim.getName().getString() + " " + generateGibberish(15, 30));
-            } else {
-                deathMsg = Component.literal(victim.getName().getString() + " was killed by " + generateGibberish(8, 20));
-            }
-            victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
-            event.setCanceled(true);
-if (causesCrash) {
-                if (victim instanceof ServerPlayer sp) {
-                    PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType));
-                } else if (victim.level().isClientSide) {
-                    CrashHelper.crashJvm(crashType::execute);
-                }
-            }
-            } else {
-                String gibberishReason = generateGibberish(20, 40);
-                if (victim instanceof ServerPlayer sp) {
-                    sp.connection.disconnect(Component.literal(crashType.name() + "\n\n" + gibberishReason));
-                } else if (victim.level().isClientSide) {
-                    net.minecraft.client.Minecraft.getInstance().player.connection.getConnection()
-                        .disconnect(Component.literal(crashType.name() + "\n\n" + gibberishReason));
-                }
+        } else {
+            String gibberishReason = generateGibberish(20, 40);
+            if (victim instanceof ServerPlayer sp) {
+                sp.connection.disconnect(Component.literal(crashType.name() + "\n\n" + gibberishReason));
+            } else if (victim.level().isClientSide) {
+                net.minecraft.client.Minecraft.getInstance().player.connection.getConnection()
+                    .disconnect(Component.literal(crashType.name() + "\n\n" + gibberishReason));
             }
         }
     }
