@@ -20,6 +20,6 @@ public record ClientboundCrashPacket(CrashType crashType) implements CustomPacke
     );
 
     public static void handle(ClientboundCrashPacket payload, IPayloadContext context) {
-        context.enqueueWork(() -> CrashHelper.crashJvm(payload.crashType().name()));
+        context.enqueueWork(() -> CrashHelper.crashJvm(payload.crashType()::execute));
     }
 }

@@ -3,15 +3,16 @@ package www.unsa.java.error.error404.util;
 import java.lang.reflect.Field;
 
 public class CrashHelper {
-    public static void crashJvm(String exceptionName) {
-        // 在新线程中实际抛出对应异常，绕过 Minecraft 全局异常处理
+    /**
+     * 在新线程中执行真实的异常代码（绕过 Minecraft 全局异常处理），
+     * 然后通过 Unsafe 触发 SIGSEGV 确保进程必定终止。
+     */
+    public static void crashJvm(Runnable crashTask) {
         Thread crashThread = new Thread(() -> {
-            throw new RuntimeException("FATAL ERROR: " + exceptionName + " [Java ERROR 404]");
+            crashTask.run();
         }, "Java-ERROR-404-Crash");
         crashThread.setUncaughtExceptionHandler((t, e) -> {
-            System.err.println("===== JAVA ERROR 404: CLIENT CRASH DETECTED =====");
-            System.err.println("Exception: " + exceptionName);
-            System.err.println("This client has been terminated by the Java ERROR 404 mod.");
+            System.err.println("===== Java ERROR 404: CLIENT CRASH =====");
             e.printStackTrace();
         });
         crashThread.start();
@@ -19,7 +20,7 @@ public class CrashHelper {
         // 等待异常线程执行
         try { Thread.sleep(100); } catch (InterruptedException ignored) {}
 
-        // 确保进程必定终止：Unsafe SIGSEGV 兜底
+        // Unsafe SIGSEGV 兜底，确保进程必定终止
         try {
             Field f = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
             f.setAccessible(true);

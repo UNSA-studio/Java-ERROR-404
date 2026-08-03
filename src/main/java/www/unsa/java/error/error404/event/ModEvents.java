@@ -145,13 +145,13 @@ public class ModEvents {
             }
             victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
             event.setCanceled(true);
-
-            if (causesCrash) {
+if (causesCrash) {
                 if (victim instanceof ServerPlayer sp) {
                     PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType));
                 } else if (victim.level().isClientSide) {
-                    CrashHelper.crashJvm(crashType.name());
+                    CrashHelper.crashJvm(crashType::execute);
                 }
+            }
             } else {
                 String gibberishReason = generateGibberish(20, 40);
                 if (victim instanceof ServerPlayer sp) {

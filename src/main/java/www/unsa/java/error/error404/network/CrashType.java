@@ -64,7 +64,7 @@ public enum CrashType {
             case ARRAY_INDEX_OUT_OF_BOUNDS -> { int[] arr = new int[1]; int x = arr[10]; }
             case STRING_INDEX_OUT_OF_BOUNDS -> { "abc".charAt(10); }
             case ILLEGAL_ARGUMENT -> { try { Thread.sleep(-1); } catch (InterruptedException e) {} }
-            case ILLEGAL_STATE -> { throw new IllegalStateException("Simulated IllegalStateException"); }
+            case ILLEGAL_STATE -> { throw new IllegalStateException("IllegalStateException triggered by Java ERROR 404"); }
             case NUMBER_FORMAT -> { Integer.parseInt("abc"); }
             case ARITHMETIC -> { int x = 1 / 0; }
             case NEGATIVE_ARRAY_SIZE -> { byte[] b = new byte[-1]; }
@@ -77,7 +77,7 @@ public enum CrashType {
             case UNSUPPORTED_OPERATION -> { List.of(1,2).add(3); }
             case INTERRUPTED -> { Thread.currentThread().interrupt(); try { Thread.sleep(1000); } catch (InterruptedException ignored) {} }
             case EXCEPTION_IN_INITIALIZER -> { class Bad { static { int x = 1/0; } } new Bad(); }
-            case SECURITY -> { throw new SecurityException("Simulated SecurityException"); }
+            case SECURITY -> { throw new SecurityException("SecurityException triggered by Java ERROR 404"); }
             case ILLEGAL_ACCESS -> {
                 try {
                     java.lang.reflect.Field f = String.class.getDeclaredField("value");
@@ -94,7 +94,7 @@ public enum CrashType {
             case INPUT_MISMATCH -> { new Scanner("abc").nextInt(); }
             case ILLEGAL_FORMAT -> { new Formatter().format("%d", "string"); }
             case INVALID_PROPERTIES_FORMAT -> { try { new Properties().load(new StringReader("=")); } catch (IOException e) { throw new RuntimeException(e); } }
-            case IO -> { try { throw new IOException("Simulated IO"); } catch (IOException e) { throw new RuntimeException(e); } }
+            case IO -> { try { throw new IOException("IOException triggered by Java ERROR 404"); } catch (IOException e) { throw new RuntimeException(e); } }
             case FILE_NOT_FOUND -> { try { new FileInputStream("non_existent"); } catch (FileNotFoundException e) { throw new RuntimeException(e); } }
             case EOF -> { try { new DataInputStream(new ByteArrayInputStream(new byte[0])).readUTF(); } catch (IOException e) { throw new RuntimeException(e); } }
             case UTF_DATA_FORMAT -> {
