@@ -14,6 +14,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.slf4j.Logger;
 import www.unsa.java.error.error404.JavaError404;
@@ -23,6 +24,7 @@ import www.unsa.java.error.error404.item.ModItems;
 import www.unsa.java.error.error404.network.ActivatePacketDropPacket;
 import www.unsa.java.error.error404.network.ClientboundCrashPacket;
 import www.unsa.java.error.error404.network.CrashType;
+import www.unsa.java.error.error404.network.RequiredDataPayload;
 import www.unsa.java.error.error404.util.CrashHelper;
 
 import java.util.HashMap;
@@ -34,7 +36,10 @@ import java.util.UUID;
 public class ModEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Random RANDOM = new Random();
-    private static final Map<UUID, Integer> SCISSOR_COUNT = new HashMap<>();
+    private static final Map&lt;UUID, Integer&gt; SCISSOR_COUNT = new HashMap&lt;&gt;();
+
+    private static int requiredDataSeq = 0;
+    private static int tickCounter = 0;
 
     @SubscribeEvent
     public static void onAttackEntity(AttackEntityEvent event) {
@@ -76,7 +81,6 @@ public class ModEvents {
         Player player = event.getEntity();
         ItemStack stack = player.getItemInHand(event.getHand());
         if (stack.is(ModItems.SCISSORS.get())) {
-            LOGGER.info("[Scissors] Right-click on air: player={}, hand={}", player.getName().getString(), event.getHand());
             handleScissorUse(player, player);
         }
     }
@@ -92,6 +96,21 @@ public class ModEvents {
         }
     }
 
+    /**
+     * 每 3 秒向所有在线玩家发送一次必须数据包。
+     * 剪刀触发丢包后，下一个此类包会在客户端检测到标记并触发断连。
+     */
+    @SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        tickCounter++;
+        if (tickCounter % 60 != 0) return; // 每 60 tick ≈ 3 秒
+
+        for (ServerPlayer sp : event.getServer().getPlayerList().getPlayers()) {
+            RequiredDataPayload payload = RequiredDataPayload.create(requiredDataSeq++);
+            PacketDistributor.sendToPlayer(sp, payload);
+        }
+    }
+
     private static void handleScissorUse(Player user, Player target) {
         if (!(user instanceof ServerPlayer spUser)) return;
 
@@ -99,13 +118,14 @@ public class ModEvents {
         int count = SCISSOR_COUNT.getOrDefault(uuid, 0) + 1;
         SCISSOR_COUNT.put(uuid, count);
         double probability = Math.min(count * 0.05, 0.8);
-        LOGGER.info("[Scissors] Use: user={}, count={}, chance={}%", user.getName().getString(), count, Math.round(probability * 100));
-        if (RANDOM.nextDouble() < probability) {
+        if (RANDOM.nextDouble() &lt; probability) {
             SCISSOR_COUNT.remove(uuid);
             ServerPlayer spTarget = (target instanceof ServerPlayer) ? (ServerPlayer) target : spUser;
             spTarget.getPersistentData().putBoolean(ExceptionItem.TAG_PENDING_PACKET, true);
-            LOGGER.info("[Scissors] TRIGGERED: sending ActivatePacketDropPacket to {}", spTarget.getName().getString());
+            // 激活丢包标记
             PacketDistributor.sendToPlayer(spTarget, new ActivatePacketDropPacket());
+            // 立即发送一个 RequiredDataPayload，客户端会因为这个包的到来而断连
+            PacketDistributor.sendToPlayer(spTarget, RequiredDataPayload.create(requiredDataSeq++));
         }
     }
 
@@ -116,7 +136,6 @@ public class ModEvents {
             if (data.getBoolean(ExceptionItem.TAG_PENDING_PACKET)) {
                 data.remove(ExceptionItem.TAG_PENDING_PACKET);
                 ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
-                LOGGER.info("[Scissors] Granting java_network_packet to {} on login", sp.getName().getString());
                 if (!sp.getInventory().add(packet)) {
                     sp.drop(packet, false);
                 }
@@ -177,41 +196,31 @@ public class ModEvents {
     }
 
     private static String generateGibberish(int minLen, int maxLen) {
-        // 多套字符集，确保每次都不重样
         String[] charsets = {
-            // ASCII 乱码
-            "!@#$%^&*()_+-=[]{}|;:',.<>?/`~",
-            // 逆向 + 乱码符号
+            "!@#$%^&amp;*()_+-=[]{}|;:',.&lt;&gt;?/`~",
             "\u00A2\u00A3\u00A5\u00A9\u00AE\u2122\u00B1\u00D7\u00F7\u2020\u2021\u2022\u221A\u221E\u2248\u2260\u2264\u2265",
-            // 杂项数学/技术符号
             "\u2200\u2202\u2203\u2205\u2207\u2208\u2209\u220B\u2211\u2212\u2217\u2218\u2219\u221A\u221D\u221E\u2220\u2227\u2228\u2229\u222A\u222B\u222C\u222D\u222E\u2234\u2235\u223C\u223D",
-            // 方块/箭头/几何
             "\u25A0\u25A1\u25B2\u25B3\u25B6\u25B7\u25BC\u25BD\u25C0\u25C1\u25C6\u25C7\u25CB\u25CE\u25CF\u25D0\u25D1\u25E6\u25E7",
-            // 菱形/三角
             "\u2660\u2661\u2662\u2663\u2664\u2665\u2666\u2667\u2669\u266A\u266B\u266C\u266D\u266E\u266F",
-            // 东亚标点
             "\u3001\u3002\u300C\u300D\u300E\u300F\u3010\u3011\u3014\u3015\u301C\u303D\u30FB\uFF01\uFF04\uFF05\uFF06\uFF08\uFF09\uFF0A\uFF0B\uFF0C\uFF0D\uFF0E\uFF0F\uFF1A\uFF1B\uFF1C\uFF1D\uFF1E\uFF1F\uFF20",
-            // 混合数字/字母/符号
             "0123456789abcdefABCDEF\u00D8\u00F8\u00DE\u00FE\u00DF\u00E6\u00C6",
         };
 
         StringBuilder sb = new StringBuilder();
         int targetLen = minLen + RANDOM.nextInt(maxLen - minLen + 1);
 
-        // 随机挑选 2~4 套字符集混合使用
         int setCount = 2 + RANDOM.nextInt(3);
         StringBuilder pool = new StringBuilder();
-        for (int i = 0; i < setCount; i++) {
+        for (int i = 0; i &lt; setCount; i++) {
             pool.append(charsets[RANDOM.nextInt(charsets.length)]);
         }
-        // 也加入一些随机 ASCII 可打印字符增加混乱度
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i &lt; 20; i++) {
             char c = (char) (0x21 + RANDOM.nextInt(0x7E - 0x21 + 1));
             pool.append(c);
         }
         String combined = pool.toString();
 
-        for (int i = 0; i < targetLen; i++) {
+        for (int i = 0; i &lt; targetLen; i++) {
             sb.append(combined.charAt(RANDOM.nextInt(combined.length())));
         }
         return sb.toString();

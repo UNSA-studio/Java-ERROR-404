@@ -9,6 +9,7 @@ import www.unsa.java.error.error404.item.ModDataComponents;
 import www.unsa.java.error.error404.item.ModItems;
 import www.unsa.java.error.error404.network.ActivatePacketDropPacket;
 import www.unsa.java.error.error404.network.ClientboundCrashPacket;
+import www.unsa.java.error.error404.network.RequiredDataPayload;
 
 @Mod(JavaError404.MODID)
 public class JavaError404 {
@@ -32,6 +33,11 @@ public class JavaError404 {
             ActivatePacketDropPacket.TYPE,
             ActivatePacketDropPacket.STREAM_CODEC,
             ActivatePacketDropPacket::handle
+        );
+        registrar.playToClient(
+            RequiredDataPayload.TYPE,
+            RequiredDataPayload.STREAM_CODEC,
+            RequiredDataPayload::handle
         );
     }
 }
