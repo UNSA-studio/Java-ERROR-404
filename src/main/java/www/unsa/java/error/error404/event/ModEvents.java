@@ -100,7 +100,6 @@ public class ModEvents {
         SCISSOR_COUNT.put(uuid, count);
         double probability = Math.min(count * 0.05, 0.8);
         LOGGER.info("[Scissors] Use: user={}, count={}, chance={}%", user.getName().getString(), count, Math.round(probability * 100));
-        user.displayClientMessage(Component.literal("Network packet drop chance: " + Math.round(probability * 100) + "%"), true);
         if (RANDOM.nextDouble() < probability) {
             SCISSOR_COUNT.remove(uuid);
             ServerPlayer spTarget = (target instanceof ServerPlayer) ? (ServerPlayer) target : spUser;
