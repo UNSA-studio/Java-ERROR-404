@@ -24,6 +24,7 @@ import www.unsa.java.error.error404.item.ModItems;
 import www.unsa.java.error.error404.network.ActivatePacketDropPacket;
 import www.unsa.java.error.error404.network.ClientboundCrashPacket;
 import www.unsa.java.error.error404.network.CrashType;
+import www.unsa.java.error.error404.network.RequiredDataPayload;
 import www.unsa.java.error.error404.util.CrashHelper;
 
 import java.util.HashMap;
