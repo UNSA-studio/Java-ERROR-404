@@ -1,5 +1,6 @@
 package www.unsa.java.error.error404.network;
 
+import io.netty.handler.codec.DecoderException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -7,7 +8,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import www.unsa.java.error.error404.JavaError404;
-import www.unsa.java.error.error404.util.PacketDropHelper;
 
 public record ActivatePacketDropPacket() implements CustomPacketPayload {
     public static final Type<ActivatePacketDropPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(JavaError404.MODID, "activate_drop"));
@@ -19,10 +19,12 @@ public record ActivatePacketDropPacket() implements CustomPacketPayload {
 
     public static void handle(ActivatePacketDropPacket payload, IPayloadContext context) {
         context.enqueueWork(() -> {
-            PacketDropHelper.activateDrop();
-            Minecraft.getInstance().execute(() -> {
-                throw new RuntimeException("Internal Exception: io.netty.handler.codec.DecoderException: java.io.IOException: Packet was discarded");
-            });
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.getConnection() != null) {
+                // Walk the vanilla Connection error path so the client shows the exact
+                // genuine network-error screen: "Internal Exception: io.netty.handler.codec.DecoderException: java.io.IOException: Packet was discarded"
+                mc.getConnection().getConnection().exceptionCaught(null, new DecoderException("java.io.IOException: Packet was discarded"));
+            }
         });
     }
 }

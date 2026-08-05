@@ -7,6 +7,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -14,6 +15,7 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.slf4j.Logger;
 import www.unsa.java.error.error404.JavaError404;
 import www.unsa.java.error.error404.item.ExceptionItem;
 import www.unsa.java.error.error404.item.JavaItem;
@@ -27,13 +29,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 @EventBusSubscriber(modid = JavaError404.MODID)
 public class ModEvents {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final Random RANDOM = new Random();
     private static final Map<UUID, Integer> SCISSOR_COUNT = new HashMap<>();
-    private static final Map<UUID, Boolean> PENDING_PACKETS = new ConcurrentHashMap<>();
 
     @SubscribeEvent
     public static void onAttackEntity(AttackEntityEvent event) {
@@ -71,13 +72,19 @@ public class ModEvents {
     }
 
     @SubscribeEvent
+    public static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        Player player = event.getEntity();
+        ItemStack stack = player.getItemInHand(event.getHand());
+        if (stack.is(ModItems.SCISSORS.get())) {
+            LOGGER.info("[Scissors] Right-click on air: player={}, hand={}", player.getName().getString(), event.getHand());
+            handleScissorUse(player, player);
+        }
+    }
+
+    @SubscribeEvent
     public static void onLeftClickEmpty(PlayerInteractEvent.LeftClickEmpty event) {
         Player player = event.getEntity();
         ItemStack stack = player.getItemInHand(event.getHand());
-
-        if (stack.is(ModItems.SCISSORS.get())) {
-            handleScissorUse(player, player);
-        }
 
         if (stack.getItem() instanceof JavaItem && player.isCrouching()) {
             JavaItem.nextMode(stack);
@@ -92,10 +99,13 @@ public class ModEvents {
         int count = SCISSOR_COUNT.getOrDefault(uuid, 0) + 1;
         SCISSOR_COUNT.put(uuid, count);
         double probability = Math.min(count * 0.05, 0.8);
+        LOGGER.info("[Scissors] Use: user={}, count={}, chance={}%", user.getName().getString(), count, Math.round(probability * 100));
+        user.displayClientMessage(Component.literal("Network packet drop chance: " + Math.round(probability * 100) + "%"), true);
         if (RANDOM.nextDouble() < probability) {
             SCISSOR_COUNT.remove(uuid);
             ServerPlayer spTarget = (target instanceof ServerPlayer) ? (ServerPlayer) target : spUser;
-            PENDING_PACKETS.put(spTarget.getUUID(), true);
+            spTarget.getPersistentData().putBoolean(ExceptionItem.TAG_PENDING_PACKET, true);
+            LOGGER.info("[Scissors] TRIGGERED: sending ActivatePacketDropPacket to {}", spTarget.getName().getString());
             PacketDistributor.sendToPlayer(spTarget, new ActivatePacketDropPacket());
         }
     }
@@ -103,14 +113,16 @@ public class ModEvents {
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
-            UUID uuid = sp.getUUID();
-            if (PENDING_PACKETS.remove(uuid) != null) {
+            CompoundTag data = sp.getPersistentData();
+            if (data.getBoolean(ExceptionItem.TAG_PENDING_PACKET)) {
+                data.remove(ExceptionItem.TAG_PENDING_PACKET);
                 ItemStack packet = new ItemStack(ModItems.JAVA_NETWORK_PACKET.get());
+                LOGGER.info("[Scissors] Granting java_network_packet to {} on login", sp.getName().getString());
                 if (!sp.getInventory().add(packet)) {
                     sp.drop(packet, false);
                 }
                 sp.getInventory().setChanged();
-                SCISSOR_COUNT.remove(uuid);
+                SCISSOR_COUNT.remove(sp.getUUID());
             }
         }
     }
@@ -156,7 +168,11 @@ public class ModEvents {
             if (victim instanceof ServerPlayer sp) {
                 PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType, false));
             } else if (victim.level().isClientSide) {
-                net.minecraft.client.Minecraft.getInstance().execute(crashType::execute);
+                try {
+                    crashType.execute();
+                } catch (Throwable t) {
+                    net.minecraft.client.Minecraft.getInstance().emergencySaveAndCrash(net.minecraft.CrashReport.forThrowable(t, "java_error_404"));
+                }
             }
         }
     }

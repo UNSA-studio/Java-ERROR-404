@@ -13,6 +13,7 @@ public class ExceptionItem extends Item {
     public static final String TAG_CRASH_TYPE = "java_error_404_death_crash_type";
     public static final String TAG_CAUSES_CRASH = "java_error_404_death_causes_crash";
     public static final String TAG_IS_SUICIDE = "java_error_404_death_suicide";
+    public static final String TAG_PENDING_PACKET = "java_error_404_pending_packet";
 
     private final CrashType crashType;
     private final boolean causesCrash;
