@@ -11,18 +11,12 @@ import www.unsa.java.error.error404.JavaError404;
 
 import java.util.Random;
 
-/**
- * 必须数据通道 —— 服务端持续向客户端发送无用的"必须数据"。
- * 正常情况下数据被静默接收；当剪刀激活丢包后，该通道的包被视为"丢失"，
- * 客户端因收到损坏/缺失的必须数据包而触发原生断连画面。
- */
 public record RequiredDataPayload(int sequence, byte[] data) implements CustomPacketPayload {
     private static final Random RANDOM = new Random();
 
-    public static final Type&lt;RequiredDataPayload&gt; TYPE =
-        new Type&lt;&gt;(ResourceLocation.fromNamespaceAndPath(JavaError404.MODID, "required_data"));
+    public static final Type<RequiredDataPayload> TYPE =
+        new Type<>(ResourceLocation.fromNamespaceAndPath(JavaError404.MODID, "required_data"));
 
-    /** 剪刀丢包标记，被设置为 true 后下一个 RequiredDataPayload 到达时触发断连 */
     public static volatile boolean dropActive = false;
 
     public static void activateDrop() { dropActive = true; }
@@ -33,8 +27,8 @@ public record RequiredDataPayload(int sequence, byte[] data) implements CustomPa
         return new RequiredDataPayload(sequence, data);
     }
 
-    public static final StreamCodec&lt;RegistryFriendlyByteBuf, RequiredDataPayload&gt; STREAM_CODEC =
-        new StreamCodec&lt;&gt;() {
+    public static final StreamCodec<RegistryFriendlyByteBuf, RequiredDataPayload> STREAM_CODEC =
+        new StreamCodec<>() {
             @Override
             public RequiredDataPayload decode(RegistryFriendlyByteBuf buf) {
                 int seq = buf.readVarInt();
@@ -52,16 +46,14 @@ public record RequiredDataPayload(int sequence, byte[] data) implements CustomPa
         };
 
     @Override
-    public Type&lt;? extends CustomPacketPayload&gt; type() { return TYPE; }
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(RequiredDataPayload payload, IPayloadContext context) {
         if (dropActive) {
             dropActive = false;
-            context.enqueueWork(() -&gt; {
+            context.enqueueWork(() -> {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.getConnection() != null) {
-                    // 走 vanilla Connection 错误路径，
-                    // 生成真实断连画面："Internal Exception: io.netty.handler.codec.DecoderException: java.io.IOException: 远程主机强迫关闭了一个现有的连接。"
                     mc.getConnection().getConnection().exceptionCaught(null,
                         new DecoderException("java.io.IOException: 远程主机强迫关闭了一个现有的连接。"));
                 }

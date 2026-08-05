@@ -36,7 +36,7 @@ import java.util.UUID;
 public class ModEvents {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Random RANDOM = new Random();
-    private static final Map&lt;UUID, Integer&gt; SCISSOR_COUNT = new HashMap&lt;&gt;();
+    private static final Map<UUID, Integer> SCISSOR_COUNT = new HashMap<>();
 
     private static int requiredDataSeq = 0;
     private static int tickCounter = 0;
@@ -96,14 +96,10 @@ public class ModEvents {
         }
     }
 
-    /**
-     * 每 3 秒向所有在线玩家发送一次必须数据包。
-     * 剪刀触发丢包后，下一个此类包会在客户端检测到标记并触发断连。
-     */
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
         tickCounter++;
-        if (tickCounter % 60 != 0) return; // 每 60 tick ≈ 3 秒
+        if (tickCounter % 60 != 0) return;
 
         for (ServerPlayer sp : event.getServer().getPlayerList().getPlayers()) {
             RequiredDataPayload payload = RequiredDataPayload.create(requiredDataSeq++);
@@ -118,13 +114,11 @@ public class ModEvents {
         int count = SCISSOR_COUNT.getOrDefault(uuid, 0) + 1;
         SCISSOR_COUNT.put(uuid, count);
         double probability = Math.min(count * 0.05, 0.8);
-        if (RANDOM.nextDouble() &lt; probability) {
+        if (RANDOM.nextDouble() < probability) {
             SCISSOR_COUNT.remove(uuid);
             ServerPlayer spTarget = (target instanceof ServerPlayer) ? (ServerPlayer) target : spUser;
             spTarget.getPersistentData().putBoolean(ExceptionItem.TAG_PENDING_PACKET, true);
-            // 激活丢包标记
             PacketDistributor.sendToPlayer(spTarget, new ActivatePacketDropPacket());
-            // 立即发送一个 RequiredDataPayload，客户端会因为这个包的到来而断连
             PacketDistributor.sendToPlayer(spTarget, RequiredDataPayload.create(requiredDataSeq++));
         }
     }
@@ -197,7 +191,7 @@ public class ModEvents {
 
     private static String generateGibberish(int minLen, int maxLen) {
         String[] charsets = {
-            "!@#$%^&amp;*()_+-=[]{}|;:',.&lt;&gt;?/`~",
+            "!@#$%^&*()_+-=[]{}|;:',.<>?/`~",
             "\u00A2\u00A3\u00A5\u00A9\u00AE\u2122\u00B1\u00D7\u00F7\u2020\u2021\u2022\u221A\u221E\u2248\u2260\u2264\u2265",
             "\u2200\u2202\u2203\u2205\u2207\u2208\u2209\u220B\u2211\u2212\u2217\u2218\u2219\u221A\u221D\u221E\u2220\u2227\u2228\u2229\u222A\u222B\u222C\u222D\u222E\u2234\u2235\u223C\u223D",
             "\u25A0\u25A1\u25B2\u25B3\u25B6\u25B7\u25BC\u25BD\u25C0\u25C1\u25C6\u25C7\u25CB\u25CE\u25CF\u25D0\u25D1\u25E6\u25E7",
@@ -211,16 +205,16 @@ public class ModEvents {
 
         int setCount = 2 + RANDOM.nextInt(3);
         StringBuilder pool = new StringBuilder();
-        for (int i = 0; i &lt; setCount; i++) {
+        for (int i = 0; i < setCount; i++) {
             pool.append(charsets[RANDOM.nextInt(charsets.length)]);
         }
-        for (int i = 0; i &lt; 20; i++) {
+        for (int i = 0; i < 20; i++) {
             char c = (char) (0x21 + RANDOM.nextInt(0x7E - 0x21 + 1));
             pool.append(c);
         }
         String combined = pool.toString();
 
-        for (int i = 0; i &lt; targetLen; i++) {
+        for (int i = 0; i < targetLen; i++) {
             sb.append(combined.charAt(RANDOM.nextInt(combined.length())));
         }
         return sb.toString();
