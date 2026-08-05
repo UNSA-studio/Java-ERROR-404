@@ -19,8 +19,6 @@ public record RequiredDataPayload(int sequence, byte[] data) implements CustomPa
 
     public static volatile boolean dropActive = false;
 
-    public static void activateDrop() { dropActive = true; }
-
     public static RequiredDataPayload create(int sequence) {
         byte[] data = new byte[64 + RANDOM.nextInt(192)];
         RANDOM.nextBytes(data);

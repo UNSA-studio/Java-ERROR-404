@@ -24,7 +24,6 @@ import www.unsa.java.error.error404.item.ModItems;
 import www.unsa.java.error.error404.network.ActivatePacketDropPacket;
 import www.unsa.java.error.error404.network.ClientboundCrashPacket;
 import www.unsa.java.error.error404.network.CrashType;
-import www.unsa.java.error.error404.network.RequiredDataPayload;
 import www.unsa.java.error.error404.util.CrashHelper;
 
 import java.util.HashMap;
@@ -125,7 +124,6 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        RequiredDataPayload.dropActive = false;
         if (event.getEntity() instanceof ServerPlayer sp) {
             CompoundTag data = sp.getPersistentData();
             if (data.getBoolean(ExceptionItem.TAG_PENDING_PACKET)) {
