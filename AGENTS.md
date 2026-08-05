@@ -11,7 +11,7 @@ NeoForge Minecraft mod (MC 1.21.1, NeoForge 21.1.219, Java 21, Gradle 9.2.1 wrap
 
 ## Committing
 
-- Always commit with the identity configured in the local git config (`git config user.name` / `user.email` — currently `Ccat_Q <16045902+ccat_q@user.noreply.gitee.com>`). Never change or bypass this identity, and never attribute a commit to any other account.
+- Always commit with the identity configured in the local git config (`git config user.name` / `user.email` — currently `Ccat_Q <anqilacat@outlook.com>`, which is the verified primary email of the GitHub account `Ccat-Q`). Never change or bypass this identity, and never attribute a commit to any other account.
 - Never add any credit/co-author trailer to commit messages — no `Co-authored-by:`, no "Ultraworked with", no other-account signatures. Every commit must be authored solely by the local identity above.
 
 ## How the mod works
