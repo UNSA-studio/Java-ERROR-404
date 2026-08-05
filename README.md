@@ -24,7 +24,7 @@ A NeoForge prank/griefing mod for **Minecraft 1.21.1**. Attack a player with an 
 | Attack a player with an exception item / 用异常物品攻击玩家 | Victim's death is cancelled, a gibberish death message is broadcast, and the victim's client crashes / disconnects |
 | Crouch + right-click with an exception item / 蹲下 + 右键异常物品 | Suicide — crash yourself |
 | Right-click a player with scissors / 右键玩家使用剪刀 | Ramp the drop chance (5% per use, +5% each, cap 80%) and try to drop the target's network packet |
-| Right-click air with scissors / 对空气右键剪刀 | Same, targeting yourself (watch the action-bar chance) |
+| Right-click air with scissors / 对空气右键剪刀 | Same, targeting yourself |
 | Re-enter after being disconnected / 被踢后重新进服 | `java_network_packet` is granted to your inventory |
 
 Give yourself items in-game: `/give @s java_error_404:scissors`
