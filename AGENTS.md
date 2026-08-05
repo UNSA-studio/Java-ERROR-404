@@ -9,6 +9,11 @@ NeoForge Minecraft mod (MC 1.21.1, NeoForge 21.1.219, Java 21, Gradle 9.2.1 wrap
 - No test sources (`src/test` is empty); the `test` task is a no-op. No linter/formatter configured.
 - `gradle.properties` sets `org.gradle.daemon=false` and `-Xmx3G`: every local Gradle invocation is a cold JVM start. Don't chain multiple Gradle commands in one shell line.
 
+## Committing
+
+- Always commit with the identity configured in the local git config (`git config user.name` / `user.email` — currently `Ccat_Q <16045902+ccat_q@user.noreply.gitee.com>`). Never change or bypass this identity, and never attribute a commit to any other account.
+- Never add any credit/co-author trailer to commit messages — no `Co-authored-by:`, no "Ultraworked with", no other-account signatures. Every commit must be authored solely by the local identity above.
+
 ## How the mod works
 
 - **Death/crash flow**: `ExceptionItem` attack (or crouch-use = suicide) writes a `CrashType` + fatal flag into the *victim's player persistent data NBT* (`player.getPersistentData()`, tag names in `ExceptionItem`). `ModEvents.onLivingDeath` reads those tags, cancels the death, broadcasts a gibberish death message, then sends `ClientboundCrashPacket` to the victim — or crashes locally in singleplayer (no network path exists there).
