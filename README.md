@@ -14,7 +14,7 @@ A NeoForge prank/griefing mod for **Minecraft 1.21.1**. Attack a player with an 
   - **Fatal (致命)** — e.g. `NullPointerException`, `StackOverflowError`, `OutOfMemoryError`: runs the real Java exception, then hard-crashes the victim's JVM via `Unsafe` (SIGSEGV).
   - **Non-fatal (非致命)** — e.g. `IOException`, `SocketException`, `BufferUnderflowException`: throws the real exception and produces a genuine crash report + exit, matching vanilla client crash behaviour.
 - **Java item (`java_item`)** — eating it crashes the JVM with `UnsatisfiedLinkError`; attacking with it instantly kills. Crouch + left-click air cycles modes (Ordinary / Data Marker / Data Analysis / Overload / Nothing).
-- **Scissors (`scissors`)** — "network packet drop": each use raises a 5% drop probability (capped at 80%); on success the target's client receives the exact genuine disconnect screen *"Internal Exception: io.netty.handler.codec.DecoderException: java.io.IOException: Packet was discarded"*.
+- **Scissors (`scissors`)** — "network packet drop": each use raises a 5% drop probability (capped at 80%); on success the target's client receives the standard network-error disconnect screen via a `RequiredDataPayload` integrity check, matching vanilla behaviour.
 - **Java Network Packet (`java_network_packet`)** — the reward: after the disconnect, re-entering the world (even after a full restart) grants the item, persisted in the player's NBT data.
 
 ## Usage / 使用方法

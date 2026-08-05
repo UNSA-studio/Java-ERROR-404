@@ -125,6 +125,7 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+        RequiredDataPayload.dropActive = false;
         if (event.getEntity() instanceof ServerPlayer sp) {
             CompoundTag data = sp.getPersistentData();
             if (data.getBoolean(ExceptionItem.TAG_PENDING_PACKET)) {
