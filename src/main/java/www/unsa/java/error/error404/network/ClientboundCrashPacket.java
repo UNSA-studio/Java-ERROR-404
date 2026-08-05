@@ -1,5 +1,6 @@
 package www.unsa.java.error.error404.network;
 
+import net.minecraft.CrashReport;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -28,7 +29,12 @@ public record ClientboundCrashPacket(CrashType crashType, boolean fatal) impleme
             if (payload.fatal()) {
                 CrashHelper.crashJvm(payload.crashType()::execute);
             } else {
-                Minecraft.getInstance().execute(payload.crashType()::execute);
+                try {
+                    payload.crashType().execute();
+                } catch (Throwable t) {
+                    // Genuine crash report + exit, matching vanilla client crash behaviour in 1.21.1
+                    Minecraft.getInstance().emergencySaveAndCrash(CrashReport.forThrowable(t, "java_error_404"));
+                }
             }
         });
     }
