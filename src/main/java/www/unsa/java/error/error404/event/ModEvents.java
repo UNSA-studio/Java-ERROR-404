@@ -2,6 +2,7 @@ package www.unsa.java.error.error404.event;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -162,10 +163,13 @@ public class ModEvents {
         }
 
         Component deathMsg;
+        String gibberish = generateGibberish(isSuicide ? 15 : 8, isSuicide ? 30 : 20);
+        Component gibberishComponent = Component.literal(gibberish)
+            .withStyle(Style.EMPTY.withObfuscated(true));
         if (isSuicide) {
-            deathMsg = Component.literal(victim.getName().getString() + " " + generateGibberish(15, 30));
+            deathMsg = Component.literal(victim.getName().getString() + " ").append(gibberishComponent);
         } else {
-            deathMsg = Component.literal(victim.getName().getString() + " was killed by " + generateGibberish(8, 20));
+            deathMsg = Component.literal(victim.getName().getString() + " was killed by ").append(gibberishComponent);
         }
         victim.level().players().forEach(p -> p.sendSystemMessage(deathMsg));
         event.setCanceled(true);
@@ -180,11 +184,9 @@ public class ModEvents {
             if (victim instanceof ServerPlayer sp) {
                 PacketDistributor.sendToPlayer(sp, new ClientboundCrashPacket(crashType, false));
             } else if (victim.level().isClientSide) {
-                try {
-                    crashType.execute();
-                } catch (Throwable t) {
-                    net.minecraft.client.Minecraft.getInstance().emergencySaveAndCrash(net.minecraft.CrashReport.forThrowable(t, "java_error_404"));
-                }
+                net.minecraft.client.Minecraft.getInstance().getConnection().getConnection()
+                    .exceptionCaught(null,
+                        new io.netty.handler.codec.DecoderException(crashType.javaException()));
             }
         }
     }
