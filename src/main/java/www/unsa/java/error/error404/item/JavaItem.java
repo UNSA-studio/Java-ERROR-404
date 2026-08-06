@@ -29,10 +29,9 @@ public class JavaItem extends Item {
     public static void nextMode(ItemStack stack) {
         String current = getMode(stack);
         String next = switch (current) {
-            case "Ordinary" -> "Data Marker";
-            case "Data Marker" -> "Data Analysis";
-            case "Data Analysis" -> "Overload";
+            case "Ordinary" -> "Overload";
             case "Overload" -> "Nothing";
+            case "Nothing" -> "Ordinary";
             default -> "Ordinary";
         };
         setMode(stack, next);
@@ -42,10 +41,23 @@ public class JavaItem extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (entity instanceof Player player) {
             String mode = getMode(stack);
-            if (mode.equals("Ordinary") || mode.equals("Overload")) {
-                CrashHelper.crashJvm(() -> {
+            switch (mode) {
+                case "Ordinary" -> CrashHelper.crashJvm(() -> {
                     throw new UnsatisfiedLinkError("Unable to load library 'java': java.lang.UnsatisfiedLinkError");
                 });
+                case "Overload" -> {
+                    int overloads = stack.getOrDefault(ModDataComponents.OVERLOAD_COUNT.get(), 0) + 1;
+                    if (overloads >= 5) {
+                        stack.set(ModDataComponents.OVERLOAD_COUNT.get(), 0);
+                        CrashHelper.crashJvm(() -> {
+                            throw new UnsatisfiedLinkError("Unable to load library 'java': java.lang.UnsatisfiedLinkError");
+                        });
+                    } else {
+                        stack.set(ModDataComponents.OVERLOAD_COUNT.get(), overloads);
+                        player.displayClientMessage(Component.literal("Overload " + overloads + "/5"), true);
+                    }
+                }
+                default -> { /* Nothing mode: 无效果 */ }
             }
         }
         return super.finishUsingItem(stack, level, entity);
