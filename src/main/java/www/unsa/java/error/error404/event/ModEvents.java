@@ -190,6 +190,18 @@ public class ModEvents {
     }
 
     @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer sp) {
+            UUID uuid = sp.getUUID();
+            lastScanTick.remove(uuid);
+            overlordProbability.remove(uuid);
+            overlordLastCheck.remove(uuid);
+            lastJavaMode.remove(uuid);
+            EntityScanner.cleanup(sp);
+        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) {
             CompoundTag data = sp.getPersistentData();

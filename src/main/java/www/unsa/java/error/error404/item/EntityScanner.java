@@ -55,29 +55,26 @@ public class EntityScanner {
         String teamName = "j404_" + player.getName().getString();
         Scoreboard scoreboard = player.level().getScoreboard();
         PlayerTeam team = scoreboard.getPlayerTeam(teamName);
-        if (team != null) {
-            for (String member : team.getPlayers()) {
-                scoreboard.removePlayerFromTeam(member, team);
-                // 恢复原队伍
-                UUID uuid = null;
-                for (Entity e : player.level().getEntities(player,
-                        new AABB(player.blockPosition()).inflate(SCAN_RADIUS),
-                        ent -> ent.getScoreboardName().equals(member))) {
-                    uuid = e.getUUID();
-                    break;
+        if (team == null) return;
+
+        // 遍历前拷贝，避免 ConcurrentModificationException
+        List<String> members = new ArrayList<>(team.getPlayers());
+        for (String member : members) {
+            scoreboard.removePlayerFromTeam(member, team);
+            // 恢复原队伍
+            for (Entity e : player.level().getEntities(player,
+                    new AABB(player.blockPosition()).inflate(SCAN_RADIUS),
+                    ent -> ent.getScoreboardName().equals(member))) {
+                UUID uuid = e.getUUID();
+                String oldTeamName = PREV_TEAMS.remove(uuid);
+                if (oldTeamName != null) {
+                    PlayerTeam oldTeam = scoreboard.getPlayerTeam(oldTeamName);
+                    if (oldTeam != null) scoreboard.addPlayerToTeam(member, oldTeam);
                 }
-                if (uuid != null) {
-                    String oldTeamName = PREV_TEAMS.remove(uuid);
-                    if (oldTeamName != null) {
-                        PlayerTeam oldTeam = scoreboard.getPlayerTeam(oldTeamName);
-                        if (oldTeam != null) {
-                            scoreboard.addPlayerToTeam(member, oldTeam);
-                        }
-                    }
-                }
+                break;
             }
-            scoreboard.removePlayerTeam(team);
         }
+        scoreboard.removePlayerTeam(team);
     }
 
     public static void showTargetInfo(ServerPlayer player) {

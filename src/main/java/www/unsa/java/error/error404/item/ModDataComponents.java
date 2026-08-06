@@ -14,6 +14,4 @@ public class ModDataComponents {
 
     public static final Supplier<DataComponentType<String>> MODE = REGISTRY.register("mode",
         () -> DataComponentType.<String>builder().persistent(Codec.STRING).build());
-    public static final Supplier<DataComponentType<Integer>> OVERLOAD_COUNT = REGISTRY.register("overload_count",
-        () -> DataComponentType.<Integer>builder().persistent(Codec.INT).build());
 }
