@@ -1,6 +1,8 @@
 package www.unsa.java.error.error404.item;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodProperties;
@@ -57,6 +59,15 @@ public class JavaItem extends Item {
     /** 当前模式是否可食用 */
     public static boolean canEat(String mode) {
         return mode.equals(MODE_ORDINARY) || mode.equals(MODE_OVERLORD);
+    }
+
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (!canEat(getMode(stack))) {
+            return InteractionResultHolder.fail(stack);
+        }
+        return super.use(level, player, hand);
     }
 
     @Override

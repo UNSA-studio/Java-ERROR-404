@@ -20,7 +20,7 @@ import net.minecraft.ChatFormatting;
 import java.util.*;
 
 public class EntityScanner {
-    private static final int SCAN_RADIUS = 160;
+    private static final int SCAN_RADIUS = 80; // 5 区块，性能优化
 
     private static final Map<UUID, String> PREV_TEAMS = new HashMap<>();
 
@@ -41,7 +41,6 @@ public class EntityScanner {
             } else {
                 team.setColor(color);
             }
-            // 记录原队伍以便恢复
             PlayerTeam oldTeam = scoreboard.getPlayersTeam(entity.getScoreboardName());
             if (oldTeam != null && !oldTeam.getName().equals(teamName)) {
                 PREV_TEAMS.put(entity.getUUID(), oldTeam.getName());
@@ -57,14 +56,13 @@ public class EntityScanner {
         PlayerTeam team = scoreboard.getPlayerTeam(teamName);
         if (team == null) return;
 
-        // 遍历前拷贝，避免 ConcurrentModificationException
         List<String> members = new ArrayList<>(team.getPlayers());
         for (String member : members) {
             scoreboard.removePlayerFromTeam(member, team);
-            // 恢复原队伍
             for (Entity e : player.level().getEntities(player,
                     new AABB(player.blockPosition()).inflate(SCAN_RADIUS),
                     ent -> ent.getScoreboardName().equals(member))) {
+                e.setGlowingTag(false);
                 UUID uuid = e.getUUID();
                 String oldTeamName = PREV_TEAMS.remove(uuid);
                 if (oldTeamName != null) {

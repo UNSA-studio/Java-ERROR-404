@@ -152,7 +152,7 @@ public class ModEvents {
         }
 
         long lastScan = lastScanTick.getOrDefault(uuid, 0L);
-        if (gameTime - lastScan < 40) return;
+        if (gameTime - lastScan < 100) return;
         lastScanTick.put(uuid, gameTime);
 
         if (JavaItem.canScanMinerals(mode)) MineralScanner.scan(sp);
