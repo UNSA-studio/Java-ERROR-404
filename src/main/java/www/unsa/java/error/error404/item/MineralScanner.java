@@ -13,8 +13,8 @@ import org.joml.Vector3f;
 import java.util.*;
 
 public class MineralScanner {
-    private static final int SCAN_RADIUS = 80;
-    private static final int SAMPLES_PER_SCAN = 150;
+    private static final int SCAN_RADIUS = 160;
+    private static final int SAMPLES_PER_SCAN = 300;
 
     private static final Map<Block, Vector3f> ORE_COLORS = new LinkedHashMap<>();
 

@@ -20,7 +20,7 @@ import net.minecraft.ChatFormatting;
 import java.util.*;
 
 public class EntityScanner {
-    private static final int SCAN_RADIUS = 80; // 5 区块，性能优化
+    private static final int SCAN_RADIUS = 160;
 
     private static final Map<UUID, String> PREV_TEAMS = new HashMap<>();
 
