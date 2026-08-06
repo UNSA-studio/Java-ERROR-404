@@ -15,6 +15,7 @@ import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.slf4j.Logger;
@@ -22,6 +23,8 @@ import www.unsa.java.error.error404.JavaError404;
 import www.unsa.java.error.error404.item.ExceptionItem;
 import www.unsa.java.error.error404.item.JavaItem;
 import www.unsa.java.error.error404.item.ModItems;
+import www.unsa.java.error.error404.item.MineralScanner;
+import www.unsa.java.error.error404.item.EntityScanner;
 import www.unsa.java.error.error404.network.ActivatePacketDropPacket;
 import www.unsa.java.error.error404.network.ClientboundCrashPacket;
 import www.unsa.java.error.error404.network.CrashType;
@@ -41,6 +44,11 @@ public class ModEvents {
 
     private static int requiredDataSeq = 0;
     private static int tickCounter = 0;
+    // 扫描和 Overlord 追踪
+    private static final Map<UUID, Long> lastScanTick = new HashMap<>();
+    private static final Map<UUID, Long> overlordLastCheck = new HashMap<>();
+    private static final Map<UUID, Integer> overlordProbability = new HashMap<>();
+    private static final Map<UUID, String> lastJavaMode = new HashMap<>();
 
     @SubscribeEvent
     public static void onAttackEntity(AttackEntityEvent event) {
@@ -94,6 +102,63 @@ public class ModEvents {
         if (stack.getItem() instanceof JavaItem && player.isCrouching()) {
             JavaItem.nextMode(stack);
             player.displayClientMessage(Component.literal("Switched to " + JavaItem.getMode(stack)), true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        ItemStack held = sp.getMainHandItem();
+        if (!(held.getItem() instanceof JavaItem)) {
+            String prev = lastJavaMode.remove(sp.getUUID());
+            if (prev != null && (JavaItem.canScanEntities(prev) || JavaItem.canScanMinerals(prev))) {
+                EntityScanner.cleanup(sp);
+            }
+            return;
+        }
+
+        String mode = JavaItem.getMode(held);
+        String prev = lastJavaMode.put(sp.getUUID(), mode);
+        UUID uuid = sp.getUUID();
+        long gameTime = sp.level().getGameTime();
+
+        if (prev != null && !prev.equals(mode)) {
+            if (JavaItem.canScanMinerals(prev) || JavaItem.canScanEntities(prev)) {
+                EntityScanner.cleanup(sp);
+            }
+            if (mode.equals(JavaItem.MODE_OVERLORD)) {
+                overlordProbability.put(uuid, 10);
+                overlordLastCheck.put(uuid, gameTime);
+            }
+        }
+
+        if (mode.equals(JavaItem.MODE_OVERLORD)) {
+            long lastCheck = overlordLastCheck.getOrDefault(uuid, gameTime);
+            int prob = overlordProbability.getOrDefault(uuid, 10);
+            if (gameTime - lastCheck >= 6000) {
+                overlordLastCheck.put(uuid, gameTime);
+                if (RANDOM.nextInt(100) < prob) {
+                    overlordProbability.remove(uuid);
+                    overlordLastCheck.remove(uuid);
+                    CrashHelper.crashJvm(() -> {
+                        throw new OutOfMemoryError("Java heap space: Overlord memory overflow");
+                    });
+                } else {
+                    prob = Math.min(prob + 10, 100);
+                    overlordProbability.put(uuid, prob);
+                    sp.displayClientMessage(Component.literal("Overlord risk: " + prob + "%"), true);
+                }
+            }
+        }
+
+        long lastScan = lastScanTick.getOrDefault(uuid, 0L);
+        if (gameTime - lastScan < 40) return;
+        lastScanTick.put(uuid, gameTime);
+
+        if (JavaItem.canScanMinerals(mode)) MineralScanner.scan(sp);
+        if (JavaItem.canScanEntities(mode)) {
+            EntityScanner.scan(sp);
+            EntityScanner.showTargetInfo(sp);
         }
     }
 
