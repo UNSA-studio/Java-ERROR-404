@@ -65,7 +65,7 @@ public class MineralScanner {
             if (color == null) continue;
 
             // 在方块边缘生成粒子框
-            spawnParticleBox(level, pos, color);
+            spawnParticleBox(level, player, pos, color);
         }
     }
 
@@ -74,9 +74,8 @@ public class MineralScanner {
         return name.contains("_ore") || name.contains("debris");
     }
 
-    private static void spawnParticleBox(ServerLevel level, BlockPos pos, Vector3f color) {
+    private static void spawnParticleBox(ServerLevel level, ServerPlayer player, BlockPos pos, Vector3f color) {
         DustParticleOptions particle = new DustParticleOptions(color, 1.2f);
-        double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
         int edges = 3;
         for (int ex = 0; ex <= edges; ex++) {
             for (int ey = 0; ey <= edges; ey++) {
@@ -85,7 +84,8 @@ public class MineralScanner {
                         double px = pos.getX() + (ex * 1.0 / edges);
                         double py = pos.getY() + (ey * 1.0 / edges);
                         double pz = pos.getZ() + (ez * 1.0 / edges);
-                        level.sendParticles(particle, px, py, pz, 1, 0, 0, 0, 0.01);
+                        // 只发送给扫描者本人
+                        level.sendParticles(player, particle, px, py, pz, 1, 0, 0, 0, 0.01);
                     }
                 }
             }

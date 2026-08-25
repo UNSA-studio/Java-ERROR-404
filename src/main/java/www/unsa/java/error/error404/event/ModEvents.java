@@ -60,8 +60,9 @@ public class ModEvents {
             target.hurt(attacker.damageSources().genericKill(), Float.MAX_VALUE);
             event.setCanceled(true);
         }
-        if (weapon.getItem() instanceof ExceptionItem exc) {
-            CompoundTag data = target.getPersistentData();
+        // 只对玩家写崩溃标记（生物的死亡不触发 onLivingDeath 的玩家逻辑，写了也残留）
+        if (weapon.getItem() instanceof ExceptionItem exc && target instanceof Player targetPlayer) {
+            CompoundTag data = targetPlayer.getPersistentData();
             data.putString(ExceptionItem.TAG_CRASH_TYPE, exc.getCrashType().name());
             data.putBoolean(ExceptionItem.TAG_CAUSES_CRASH, exc.isCausesCrash());
             data.putBoolean(ExceptionItem.TAG_IS_SUICIDE, false);
@@ -197,6 +198,7 @@ public class ModEvents {
             overlordProbability.remove(uuid);
             overlordLastCheck.remove(uuid);
             lastJavaMode.remove(uuid);
+            SCISSOR_COUNT.remove(uuid);
             EntityScanner.cleanup(sp);
         }
     }
@@ -212,7 +214,6 @@ public class ModEvents {
                     sp.drop(packet, false);
                 }
                 sp.getInventory().setChanged();
-                SCISSOR_COUNT.remove(sp.getUUID());
             }
         }
     }

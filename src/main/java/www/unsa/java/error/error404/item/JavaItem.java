@@ -65,9 +65,16 @@ public class JavaItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (!canEat(getMode(stack))) {
+            // 非食用模式：清除 food 组件，右键无任何反应
             return InteractionResultHolder.fail(stack);
         }
         return super.use(level, player, hand);
+    }
+
+    @Override
+    public boolean isEdible() {
+        // 无法直接访问 ItemStack，交给 use() 拦截；此处保持 true 让 Ordinary/Overlord 正常
+        return true;
     }
 
     @Override
